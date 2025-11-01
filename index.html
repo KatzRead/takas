@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CS2 Trade – Dark</title>
+  <meta name="description" content="CS2 item buy/sell mock site with admin panel, inventory, compare, EN/TR" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f14; /* main background */
+      --bg-soft:#0f141b; /* panels */
+      --bg-elev:#121924; /* elevated */
+      --text:#e6edf3;
+      --muted:#9fb0c3;
+      --brand:#00a3ff; /* neon blue */
+      --brand-2:#14f1ff;
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+      --card:#0f151e; --border:#1e2937; --chip:#16202e;
+      --shadow: 0 8px 24px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#0a0f13 60%, #091016);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+    a{color:var(--brand);text-decoration:none}
+    header{position:sticky;top:0;z-index:40;background:rgba(9,16,22,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+    .wrapper{max-width:1200px;margin:0 auto;padding:16px}
+    .topbar{display:flex;align-items:center;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px}
+    .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-2))}
+    nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--border);background:var(--chip);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s;display:inline-flex;gap:8px;align-items:center}
+    .btn:hover{border-color:#2b3a4f;box-shadow:var(--shadow)}
+    .btn.primary{background:linear-gradient(135deg,var(--brand) 0%, var(--brand-2) 100%);border-color:transparent;color:#001018;font-weight:700}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:6px 10px;border-radius:10px;font-size:.9rem}
+    .btn.warn{background:var(--warn);border-color:transparent;color:#1a1205;font-weight:700}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+
+    main{max-width:1200px;margin:24px auto;padding:0 16px}
+
+    /* Sections */
+    section{display:none}
+    section.active{display:block}
+
+    .panel{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+
+    /* Marketplace */
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    @media (max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr}}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+    .thumb{aspect-ratio:4/3;background:#0b1118;display:flex;align-items:center;justify-content:center}
+    .thumb img{max-width:90%;max-height:90%;object-fit:contain;filter:drop-shadow(0 10px 10px rgba(0,0,0,.35))}
+    .card .content{padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px}
+    .name{font-weight:700}
+    .meta{font-size:.88rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:var(--chip);border:1px solid var(--border);padding:4px 8px;border-radius:999px;font-size:.75rem;color:#cfe1f8}
+    .price{margin-left:auto;font-weight:800}
+    .row{display:flex;gap:10px;align-items:center}
+
+    .filters{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+    @media (max-width:900px){.filters{grid-template-columns:1fr 1fr;}}
+    input,select,textarea{width:100%;background:#0c121b;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px}
+
+    /* Inventory table */
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+    th{color:#cfe1f8;font-weight:700;background:#0a1118;position:sticky;top:0}
+
+    /* Admin */
+    .admin-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px}
+    @media (max-width:900px){.admin-grid{grid-template-columns:1fr}}
+    .danger{color:#ffb4b4}
+    .note{color:var(--muted);font-size:.9rem}
+
+    /* Footer */
+    footer{max-width:1200px;margin:32px auto 80px;padding:0 16px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrapper topbar">
+      <div class="logo"><span class="dot"></span><span id="brand">CS2 Trade</span></div>
+      <nav>
+        <button class="btn small" data-route="market">🏪 <span data-i18n="nav_market">Pazar</span></button>
+        <button class="btn small" data-route="inventory">🎒 <span data-i18n="nav_inventory">Envanterim</span></button>
+        <button class="btn small" data-route="compare">⚖️ <span data-i18n="nav_compare">Karşılaştır</span></button>
+        <button class="btn small" data-route="admin">🛠️ <span data-i18n="nav_admin">Admin</span></button>
+        <button class="btn small" data-route="contact">💬 <span data-i18n="nav_contact">İletişim</span></button>
+        <select id="lang" class="btn small" aria-label="Language">
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+        </select>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Marketplace -->
+    <section id="market" class="active">
+      <div class="panel">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h2 style="margin:0" data-i18n="market_title">Pazar</h2>
+          <div class="row">
+            <button class="btn ghost small" id="seedBtn">🌱 <span data-i18n="seed_demo">Demo Verisi Yükle</span></button>
+            <button class="btn small" id="clearBtn">🧹 <span data-i18n="clear_all">Temizle</span></button>
+          </div>
+        </div>
+        <div class="filters">
+          <input id="q" type="search" placeholder="AK, Karambit..." data-i18n-ph="search_ph"/>
+          <select id="f-weapon"><option value="" data-i18n="any">Farketmez</option></select>
+          <select id="f-type"><option value="" data-i18n="any">Farketmez</option></select>
+          <select id="f-rarity"><option value="" data-i18n="any">Farketmez</option></select>
+          <select id="sort">
+            <option value="price_asc" data-i18n="sort_price_asc">Fiyat ↑</option>
+            <option value="price_desc" data-i18n="sort_price_desc">Fiyat ↓</option>
+            <option value="name_asc" data-i18n="sort_name_asc">İsim A→Z</option>
+            <option value="name_desc" data-i18n="sort_name_desc">İsim Z→A</option>
+          </select>
+        </div>
+        <div id="marketGrid" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- Inventory -->
+    <section id="inventory">
+      <div class="panel">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h2 style="margin:0" data-i18n="inv_title">Satılık Envanterim</h2>
+          <div class="row">
+            <button class="btn small" id="exportInv">⬇️ <span data-i18n="export_json">JSON Dışa Aktar</span></button>
+            <label class="btn small" for="importInv">⬆️ <span data-i18n="import_json">JSON İçe Al</span></label>
+            <input id="importInv" type="file" accept="application/json" style="display:none" />
+          </div>
+        </div>
+        <div class="panel" style="background:#0b1118">
+          <table id="invTable">
+            <thead>
+              <tr>
+                <th data-i18n="th_image">Görsel</th>
+                <th data-i18n="th_name">İsim</th>
+                <th data-i18n="th_price">Fiyat</th>
+                <th data-i18n="th_actions">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compare -->
+    <section id="compare">
+      <div class="panel">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h2 style="margin:0" data-i18n="cmp_title">Karşılaştır</h2>
+          <button class="btn small" id="resetCompare">♻️ <span data-i18n="reset">Sıfırla</span></button>
+        </div>
+        <div id="compareWrap" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- Admin -->
+    <section id="admin">
+      <div class="panel">
+        <div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h2 style="margin:0" data-i18n="admin_title">Admin Paneli</h2>
+          <div class="row">
+            <button class="btn small" id="exportBtn">⬇️ <span data-i18n="export_json">JSON Dışa Aktar</span></button>
+            <label class="btn small" for="importJson">⬆️ <span data-i18n="import_json">JSON İçe Al</span></label>
+            <input id="importJson" type="file" accept="application/json" style="display:none" />
+          </div>
+        </div>
+        <p class="note" data-i18n="admin_note">Not: Bu demo statiktir. Veriler tarayıcı yerel depolamaya (LocalStorage) kaydedilir. İleride backend API ekleyebilirsin.</p>
+        <div class="admin-grid">
+          <form id="itemForm" class="panel" style="gap:10px;display:grid;grid-template-columns:1fr 1fr;">
+            <input name="id" placeholder="id (otomatik)" readonly />
+            <input name="name" placeholder="İsim / Name *" required />
+            <input name="weapon" placeholder="Silah / Weapon" />
+            <input name="type" placeholder="Tür (Knife, Rifle...)" />
+            <input name="rarity" placeholder="Nadirlik" />
+            <input name="wear" placeholder="Wear (FN, MW...)" />
+            <input name="price" type="number" step="0.01" placeholder="Fiyat" />
+            <input name="img" placeholder="Görsel URL" />
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="stattrak"/> StatTrak</label>
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="souvenir"/> Souvenir</label>
+            <textarea name="notes" placeholder="Notlar" style="grid-column:1/-1"></textarea>
+            <div class="row" style="grid-column:1/-1;gap:8px">
+              <button class="btn primary" type="submit" id="saveBtn">💾 <span data-i18n="save">Kaydet</span></button>
+              <button class="btn warn" type="button" id="resetForm">↺ <span data-i18n="new">Yeni</span></button>
+            </div>
+          </form>
+
+          <div class="panel">
+            <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+              <strong data-i18n="admin_list">Ürün Listesi</strong>
+              <div class="row">
+                <input id="adminSearch" placeholder="Ara..." />
+                <select id="adminSort">
+                  <option value="name_asc" data-i18n="sort_name_asc">İsim A→Z</option>
+                  <option value="name_desc" data-i18n="sort_name_desc">İsim Z→A</option>
+                  <option value="price_asc" data-i18n="sort_price_asc">Fiyat ↑</option>
+                  <option value="price_desc" data-i18n="sort_price_desc">Fiyat ↓</option>
+                </select>
+              </div>
+            </div>
+            <table id="adminTable">
+              <thead>
+                <tr>
+                  <th>ID</th><th data-i18n="th_image">Görsel</th><th data-i18n="th_name">İsim</th><th data-i18n="th_price">Fiyat</th><th data-i18n="th_actions">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+      <div class="panel">
+        <h2 data-i18n="contact_title">İletişim</h2>
+        <p class="note" data-i18n="contact_note">Aşağıdaki linkleri dilediğin gibi özelleştir:</p>
+        <ul>
+          <li><a id="linkDiscord" target="_blank" rel="noopener">Discord</a></li>
+          <li><a id="linkSteam" target="_blank" rel="noopener">Steam</a></li>
+          <li><a id="linkMail" target="_blank" rel="noopener">E‑mail</a></li>
+          <li><a id="linkX" target="_blank" rel="noopener">X (Twitter)</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrapper">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <span>© <span id="year"></span> CS2 Trade — <span data-i18n="footer_demo">Demo Front‑End</span></span>
+      <span class="note" data-i18n="footer_storage">Veriler tarayıcı LocalStorage'da saklanır.</span>
+    </div>
+  </footer>
+
+  <script>
+  // ===== i18n =====
+  const I18N = {
+    tr: {
+      nav_market: 'Pazar', nav_inventory: 'Envanterim', nav_compare: 'Karşılaştır', nav_admin: 'Admin', nav_contact: 'İletişim',
+      market_title: 'Pazar', seed_demo: 'Demo Verisi Yükle', clear_all:'Temizle', any:'Farketmez', sort_price_asc:'Fiyat ↑', sort_price_desc:'Fiyat ↓', sort_name_asc:'İsim A→Z', sort_name_desc:'İsim Z→A', search_ph:'AK, Karambit...',
+      inv_title:'Satılık Envanterim', export_json:'JSON Dışa Aktar', import_json:'JSON İçe Al', th_image:'Görsel', th_name:'İsim', th_price:'Fiyat', th_actions:'İşlemler',
+      cmp_title:'Karşılaştır', reset:'Sıfırla',
+      admin_title:'Admin Paneli', admin_note:'Not: Bu demo statiktir. Veriler tarayıcı yerel depolamaya (LocalStorage) kaydedilir. İleride backend API ekleyebilirsin.', admin_list:'Ürün Listesi', save:'Kaydet', new:'Yeni',
+      contact_title:'İletişim', contact_note:'Aşağıdaki linkleri dilediğin gibi özelleştir:', footer_demo:'Demo Front‑End', footer_storage:'Veriler tarayıcı LocalStorage\'da saklanır.',
+      add_inv: 'Envantere Ekle', add_cmp: 'Karşılaştır', remove: 'Kaldır', edit:'Düzenle', sell:'Satışa Koy'
+    },
+    en: {
+      nav_market: 'Market', nav_inventory: 'My Inventory', nav_compare: 'Compare', nav_admin: 'Admin', nav_contact: 'Contact',
+      market_title: 'Market', seed_demo: 'Load Demo Data', clear_all:'Clear', any:'Any', sort_price_asc:'Price ↑', sort_price_desc:'Price ↓', sort_name_asc:'Name A→Z', sort_name_desc:'Name Z→A', search_ph:'AK, Karambit...',
+      inv_title:'For Sale Inventory', export_json:'Export JSON', import_json:'Import JSON', th_image:'Image', th_name:'Name', th_price:'Price', th_actions:'Actions',
+      cmp_title:'Compare', reset:'Reset',
+      admin_title:'Admin Panel', admin_note:'Note: This demo is static. Data is saved to browser LocalStorage. You can add a backend API later.', admin_list:'Product List', save:'Save', new:'New',
+      contact_title:'Contact', contact_note:'Customize the links below as you like:', footer_demo:'Demo Front‑End', footer_storage:'Data is stored in LocalStorage.',
+      add_inv: 'Add to Inventory', add_cmp: 'Compare', remove:'Remove', edit:'Edit', sell:'Put on Sale'
+    }
+  }
+  let LANG = localStorage.getItem('cs2_lang') || 'tr';
+  const $ = (q,root=document)=>root.querySelector(q);
+  const $$ = (q,root=document)=>Array.from(root.querySelectorAll(q));
+
+  function t(){
+    const dict = I18N[LANG]||I18N.tr;
+    $$('[data-i18n]').forEach(el=>{ el.textContent = dict[el.getAttribute('data-i18n')] || el.textContent });
+    $$('[data-i18n-ph]').forEach(el=>{ el.placeholder = dict[el.getAttribute('data-i18n-ph')] || el.placeholder });
+  }
+
+  // ===== Data Layer (LocalStorage) =====
+  const LS_KEYS = {
+    ITEMS:'cs2_items', MY_INV:'cs2_my_inventory', CMP:'cs2_compare', LINKS:'cs2_links'
+  }
+  const defaultLinks = {discord:'https://discord.gg/your-handle', steam:'https://steamcommunity.com/id/your-id', mail:'mailto:you@example.com', x:'https://x.com/your-handle'}
+  const links = JSON.parse(localStorage.getItem(LS_KEYS.LINKS)||'null') || defaultLinks;
+
+  function loadItems(){ return JSON.parse(localStorage.getItem(LS_KEYS.ITEMS)||'[]') }
+  function saveItems(list){ localStorage.setItem(LS_KEYS.ITEMS, JSON.stringify(list)); }
+  function loadInv(){ return JSON.parse(localStorage.getItem(LS_KEYS.MY_INV)||'[]') }
+  function saveInv(list){ localStorage.setItem(LS_KEYS.MY_INV, JSON.stringify(list)); }
+  function loadCmp(){ return JSON.parse(localStorage.getItem(LS_KEYS.CMP)||'[]') }
+  function saveCmp(list){ localStorage.setItem(LS_KEYS.CMP, JSON.stringify(list)); }
+
+  // Sample demo skins
+  const DEMO = [
+    {id:'ak-azimov-fn', name:'AK-47 | Asiimov (FN)', weapon:'AK-47', type:'Rifle', rarity:'Covert', wear:'FN', stattrak:false, souvenir:false, price: 289.90, img:'https://images.steamcdn.io/tn/730/8a4a0a1d13fc2b3f3.png'},
+    {id:'karambit-doppler-ruby', name:'Karambit | Doppler (Ruby)', weapon:'Karambit', type:'Knife', rarity:'Covert', wear:'FN', stattrak:true, souvenir:false, price: 15999.00, img:'https://images.steamcdn.io/tn/730/1f2c88c3e6b202a09.png'},
+    {id:'awp-dragon-lore', name:'AWP | Dragon Lore', weapon:'AWP', type:'Sniper', rarity:'Covert', wear:'MW', stattrak:false, souvenir:true, price: 120000.00, img:'https://images.steamcdn.io/tn/730/df7a024a1b0a1cd03.png'},
+    {id:'glock-neon', name:'Glock-18 | Neon Noir', weapon:'Glock-18', type:'Pistol', rarity:'Classified', wear:'FT', stattrak:false, souvenir:false, price: 18.50, img:'https://images.steamcdn.io/tn/730/0a86b3eab1bb9d541.png'}
+  ];
+
+  // ===== Router =====
+  function route(to){
+    $$('main section').forEach(s=>s.classList.remove('active'));
+    $('#' + to).classList.add('active');
+    window.location.hash = to;
+  }
+  window.addEventListener('hashchange',()=>{
+    const to = location.hash.replace('#','')||'market';
+    route(to);
+  })
+
+  // ===== Marketplace UI =====
+  const marketGrid = $('#marketGrid');
+  const fWeapon = $('#f-weapon');
+  const fType = $('#f-type');
+  const fRarity = $('#f-rarity');
+  const sortSel = $('#sort');
+
+  function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort() }
+
+  function rebuildFilters(items){
+    const weapons=uniqueSorted(items.map(x=>x.weapon));
+    const types=uniqueSorted(items.map(x=>x.type));
+    const rar=uniqueSorted(items.map(x=>x.rarity));
+    fWeapon.innerHTML = `<option value="">${I18N[LANG].any}</option>` + weapons.map(w=>`<option>${w}</option>`).join('');
+    fType.innerHTML = `<option value="">${I18N[LANG].any}</option>` + types.map(w=>`<option>${w}</option>`).join('');
+    fRarity.innerHTML = `<option value="">${I18N[LANG].any}</option>` + rar.map(w=>`<option>${w}</option>`).join('');
+  }
+
+  function renderMarket(){
+    let items = loadItems();
+    const q = ($('#q').value||'').toLowerCase();
+    const fw = fWeapon.value; const ft = fType.value; const fr = fRarity.value; const sort = sortSel.value;
+    if(q) items = items.filter(x=>[x.name,x.weapon,x.type,x.rarity,x.wear].join('|').toLowerCase().includes(q));
+    if(fw) items = items.filter(x=>x.weapon===fw);
+    if(ft) items = items.filter(x=>x.type===ft);
+    if(fr) items = items.filter(x=>x.rarity===fr);
+    items.sort((a,b)=>{
+      switch(sort){
+        case 'price_asc': return (a.price||0)-(b.price||0);
+        case 'price_desc': return (b.price||0)-(a.price||0);
+        case 'name_desc': return (b.name||'').localeCompare(a.name||'');
+        default: return (a.name||'').localeCompare(b.name||'');
+      }
+    })
+    marketGrid.innerHTML = items.map(cardHTML).join('') || `<div class="note">No items.</div>`;
+    // attach actions
+    $$('.btn[data-add]', marketGrid).forEach(btn=>btn.addEventListener('click',()=>{
+      const id = btn.getAttribute('data-add');
+      const item = loadItems().find(x=>x.id===id); if(!item) return;
+      const inv = loadInv(); inv.push({...item, myPrice:item.price}); saveInv(inv); renderInv(); alert('✔ Added to inventory');
+    }))
+    $$('.btn[data-cmp]', marketGrid).forEach(btn=>btn.addEventListener('click',()=>{
+      const id = btn.getAttribute('data-cmp');
+      const cmp = loadCmp(); if(!cmp.includes(id)) cmp.push(id); saveCmp(cmp); renderCompare(); alert('✔ Added to compare');
+    }))
+  }
+
+  function cardHTML(x){
+    const dict = I18N[LANG];
+    return `
+    <div class="card">
+      <div class="thumb">${x.img?`<img src="${x.img}" alt="${x.name}">`:'<span>📦</span>'}</div>
+      <div class="content">
+        <div class="row" style="gap:8px">
+          <div class="name">${x.name||'-'}</div>
+          <span class="chip">${x.weapon||''}</span>
+          <span class="chip">${x.type||''}</span>
+          <span class="chip">${x.rarity||''}</span>
+          <span class="chip">${x.wear||''}</span>
+          <span class="price">${x.price?`$${Number(x.price).toFixed(2)}`:'—'}</span>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn small" data-add="${x.id}">➕ ${dict.add_inv}</button>
+          <button class="btn small" data-cmp="${x.id}">⚖️ ${dict.add_cmp}</button>
+        </div>
+      </div>
+    </div>`
+  }
+
+  // ===== Inventory UI =====
+  function renderInv(){
+    const tbody = $('#invTable tbody');
+    const inv = loadInv();
+    tbody.innerHTML = inv.map((x,i)=>`
+      <tr>
+        <td style="width:86px"><img src="${x.img||''}" alt="${x.name}" style="width:72px;height:54px;object-fit:contain;background:#0b1118;border:1px solid var(--border);border-radius:10px"></td>
+        <td><strong>${x.name}</strong><div class="meta">${x.weapon} • ${x.type} • ${x.wear}</div></td>
+        <td style="width:140px"><input data-idx="${i}" class="priceEdit" type="number" step="0.01" value="${x.myPrice??x.price??0}"></td>
+        <td style="width:220px">
+          <button class="btn small" data-sell="${i}">💸 ${I18N[LANG].sell}</button>
+          <button class="btn small" data-rm="${i}">🗑️ ${I18N[LANG].remove}</button>
+        </td>
+      </tr>`).join('');
+
+    $$('.priceEdit').forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const idx = +inp.getAttribute('data-idx');
+        const inv2 = loadInv(); inv2[idx].myPrice = Number(inp.value||0); saveInv(inv2); renderInv();
+      })
+    })
+    $$('.btn[data-rm]').forEach(btn=>btn.addEventListener('click',()=>{
+      const idx = +btn.getAttribute('data-rm');
+      const inv2 = loadInv(); inv2.splice(idx,1); saveInv(inv2); renderInv();
+    }))
+    $$('.btn[data-sell]').forEach(btn=>btn.addEventListener('click',()=>{
+      const idx = +btn.getAttribute('data-sell');
+      alert('✅ Marked as For Sale (demo)');
+    }))
+  }
+
+  // Export/Import inventory
+  $('#exportInv').addEventListener('click',()=>downloadJSON(loadInv(),'my_inventory.json'));
+  $('#importInv').addEventListener('change',e=>importJsonFile(e, saveInv, renderInv));
+
+  // ===== Compare UI =====
+  function renderCompare(){
+    const wrap = $('#compareWrap');
+    const ids = loadCmp();
+    const data = loadItems().filter(x=>ids.includes(x.id));
+    wrap.innerHTML = data.map(x=>`
+      <div class="card">
+        <div class="thumb">${x.img?`<img src="${x.img}" alt="${x.name}">`:'<span>📦</span>'}</div>
+        <div class="content">
+          <div class="name">${x.name}</div>
+          <div class="meta">${x.weapon} • ${x.type} • ${x.rarity} • ${x.wear}</div>
+          <div class="row" style="gap:8px;justify-content:space-between"><span class="price">${x.price?`$${x.price.toFixed(2)}`:'—'}</span>
+            <button class="btn small" data-cmprm="${x.id}">🗑️ ${I18N[LANG].remove}</button></div>
+        </div>
+      </div>`).join('') || '<div class="note">No items</div>';
+
+    $$('.btn[data-cmprm]').forEach(btn=>btn.addEventListener('click',()=>{
+      const id = btn.getAttribute('data-cmprm');
+      const ids2 = loadCmp().filter(x=>x!==id); saveCmp(ids2); renderCompare();
+    }))
+  }
+  $('#resetCompare').addEventListener('click',()=>{ saveCmp([]); renderCompare(); })
+
+  // ===== Admin UI =====
+  const form = $('#itemForm');
+  function uid(){ return 'x' + Math.random().toString(36).slice(2,9) }
+
+  function fillAdminTable(list){
+    const q = ($('#adminSearch').value||'').toLowerCase();
+    const s = $('#adminSort').value;
+    let data = list;
+    if(q) data = data.filter(x=>[x.name,x.weapon,x.type,x.rarity,x.id].join('|').toLowerCase().includes(q));
+    data.sort((a,b)=>{
+      switch(s){
+        case 'price_asc': return (a.price||0)-(b.price||0);
+        case 'price_desc': return (b.price||0)-(a.price||0);
+        case 'name_desc': return (b.name||'').localeCompare(a.name||'');
+        default: return (a.name||'').localeCompare(b.name||'');
+      }
+    })
+    const tbody = $('#adminTable tbody');
+    tbody.innerHTML = data.map(x=>`
+      <tr>
+        <td style="opacity:.8">${x.id}</td>
+        <td style="width:80px"><img src="${x.img||''}" alt="${x.name}" style="width:64px;height:48px;object-fit:contain;background:#09121a;border:1px solid var(--border);border-radius:8px"></td>
+        <td><strong>${x.name}</strong><div class="meta">${x.weapon||''} • ${x.type||''} • ${x.rarity||''} • ${x.wear||''}</div></td>
+        <td>${x.price?`$${Number(x.price).toFixed(2)}`:'—'}</td>
+        <td>
+          <button class="btn small" data-edit="${x.id}">✏️ ${I18N[LANG].edit}</button>
+          <button class="btn small" data-del="${x.id}">🗑️ ${I18N[LANG].remove}</button>
+        </td>
+      </tr>`).join('');
+
+    $$('.btn[data-edit]').forEach(btn=>btn.addEventListener('click',()=>{
+      const id = btn.getAttribute('data-edit');
+      const item = loadItems().find(x=>x.id===id); if(!item) return;
+      Object.entries(item).forEach(([k,v])=>{
+        if(form[k]===undefined) return;
+        if(form[k].type==='checkbox') form[k].checked=!!v; else form[k].value=v;
+      });
+    }))
+    $$('.btn[data-del]').forEach(btn=>btn.addEventListener('click',()=>{
+      const id = btn.getAttribute('data-del');
+      if(!confirm('Silinsin mi?')) return;
+      const list2 = loadItems().filter(x=>x.id!==id); saveItems(list2); fillAdminTable(list2); rebuildFilters(list2); renderMarket();
+    }))
+  }
+
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    data.stattrak = !!form.stattrak.checked; data.souvenir = !!form.souvenir.checked;
+    if(!data.id) data.id = data.name?.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40) || uid();
+    if(data.price!=='') data.price = Number(data.price);
+    const list = loadItems();
+    const i = list.findIndex(x=>x.id===data.id);
+    if(i>-1) list[i]=data; else list.push(data);
+    saveItems(list);
+    alert('✔ Saved');
+    fillAdminTable(list); rebuildFilters(list); renderMarket();
+  })
+  $('#resetForm').addEventListener('click',()=>{ form.reset(); form.id.value=''; })
+
+  // Export/Import product JSON
+  $('#exportBtn').addEventListener('click',()=>downloadJSON(loadItems(),'items.json'));
+  $('#importJson').addEventListener('change',e=>importJsonFile(e, saveItems, ()=>{ fillAdminTable(loadItems()); rebuildFilters(loadItems()); renderMarket(); }));
+
+  function downloadJSON(obj, filename){
+    const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+  }
+  function importJsonFile(e, saver, after){
+    const file = e.target.files?.[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ try{ const json = JSON.parse(reader.result); saver(json); after&&after(); alert('✔ Imported'); }catch(err){ alert('JSON error'); } };
+    reader.readAsText(file);
+  }
+
+  // ===== Nav & Events =====
+  $$('#lang').forEach(sel=> sel.value = LANG);
+  $('#lang').addEventListener('change',()=>{ LANG = $('#lang').value; localStorage.setItem('cs2_lang',LANG); t(); rebuildFilters(loadItems()); renderMarket(); renderInv(); renderCompare(); fillAdminTable(loadItems()); })
+  $$('#year').forEach(el=> el.textContent = new Date().getFullYear());
+  $$('#linkDiscord').forEach(el=> el.href = links.discord);
+  $$('#linkSteam').forEach(el=> el.href = links.steam);
+  $$('#linkMail').forEach(el=> el.href = links.mail);
+  $$('#linkX').forEach(el=> el.href = links.x);
+
+  $$('.btn[data-route]').forEach(btn=> btn.addEventListener('click',()=> route(btn.getAttribute('data-route')) ))
+
+  // seed & clear
+  $('#seedBtn').addEventListener('click',()=>{ saveItems(DEMO); rebuildFilters(DEMO); renderMarket(); fillAdminTable(DEMO); alert('✔ Demo items loaded'); })
+  $('#clearBtn').addEventListener('click',()=>{ if(confirm('Tüm veriler silinsin mi?')){ saveItems([]); saveInv([]); saveCmp([]); renderMarket(); renderInv(); renderCompare(); fillAdminTable([]); } })
+
+  // Admin filters
+  $('#adminSearch').addEventListener('input',()=>fillAdminTable(loadItems()))
+  $('#adminSort').addEventListener('change',()=>fillAdminTable(loadItems()))
+
+  // Initial
+  t();
+  rebuildFilters(loadItems());
+  renderMarket();
+  renderInv();
+  renderCompare();
+  fillAdminTable(loadItems());
+  route((location.hash||'#market').slice(1));
+  </script>
+</body>
+</html>
