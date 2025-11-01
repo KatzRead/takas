@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KatzTrade | CS2 Mock Site</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-color: #0e1017;
+      --card-color: #171a22;
+      --accent-color: #00b3ff;
+      --text-color: #e0e0e0;
+      --highlight: #00ffff;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .neon {
+      text-shadow: 0 0 8px var(--accent-color);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center px-8 py-4 bg-[#12141b] shadow-md border-b border-[#1e2230]">
+    <h1 class="text-2xl font-bold neon">KatzTrade</h1>
+    <ul class="flex gap-8 text-gray-300">
+      <li><a href="#home" class="hover:text-[var(--accent-color)]" onclick="showTab('home')">Home</a></li>
+      <li><a href="#market" class="hover:text-[var(--accent-color)]" onclick="showTab('market')">Market</a></li>
+      <li><a href="#compare" class="hover:text-[var(--accent-color)]" onclick="showTab('compare')">Compare</a></li>
+      <li><a href="#profile" class="hover:text-[var(--accent-color)]" onclick="showTab('profile')">Profile</a></li>
+    </ul>
+    <button class="bg-[var(--accent-color)] text-black px-4 py-2 rounded-lg font-bold">Login with Steam</button>
+  </nav>
+
+  <!-- Tabs -->
+  <section id="home" class="tab px-10 py-20 text-center">
+    <h2 class="text-4xl font-bold neon mb-4">Trade Skins Safely & Instantly</h2>
+    <p class="text-gray-400 mb-8">Compare prices across major CS2 markets before you trade.</p>
+    <button onclick="showTab('market')" class="bg-[var(--accent-color)] px-6 py-3 rounded-lg font-bold">Browse Market</button>
+  </section>
+
+  <section id="market" class="tab hidden px-10 py-10">
+    <h2 class="text-3xl font-bold mb-6">Market</h2>
+    <div id="market-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </section>
+
+  <section id="compare" class="tab hidden px-10 py-10">
+    <h2 class="text-3xl font-bold mb-6">Price Compare</h2>
+    <table class="w-full text-left border border-[#1f2430]">
+      <thead class="bg-[#171a22] text-[var(--highlight)]">
+        <tr>
+          <th class="p-2">Skin</th>
+          <th class="p-2">Steam ($)</th>
+          <th class="p-2">Buff ($)</th>
+          <th class="p-2">CSFloat ($)</th>
+          <th class="p-2">Lowest</th>
+        </tr>
+      </thead>
+      <tbody id="compare-body" class="text-gray-300"></tbody>
+    </table>
+  </section>
+
+  <section id="profile" class="tab hidden px-10 py-10">
+    <h2 class="text-3xl font-bold mb-6">Profile - KatzRead</h2>
+    <div class="bg-[#171a22] p-6 rounded-lg shadow-lg max-w-md">
+      <p><strong>Total Inventory Value:</strong> $1234.50</p>
+      <p><strong>Top Skins:</strong></p>
+      <ul class="list-disc list-inside text-gray-400">
+        <li>AK-47 | Asiimov</li>
+        <li>M4A1-S | Printstream</li>
+        <li>AWP | Wildfire</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="mt-auto text-center text-gray-500 py-4 border-t border-[#1e2230]">© 2025 KatzTrade Mock Site</footer>
+
+  <script>
+    const skins = [
+      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_fireserpent_light_large.3b9f3107.png', steam: 45.5, buff: 40.3, csfloat: 42.7 },
+      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', steam: 58.2, buff: 52.9, csfloat: 54.0 },
+      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', steam: 67.9, buff: 61.4, csfloat: 63.0 },
+      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', steam: 900.0, buff: 880.0, csfloat: 870.5 },
+      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', steam: 40.1, buff: 35.6, csfloat: 37.2 },
+      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', steam: 12.3, buff: 11.1, csfloat: 11.6 }
+    ];
+
+    const grid = document.getElementById('market-grid');
+    const compareBody = document.getElementById('compare-body');
+
+    skins.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'bg-[var(--card-color)] rounded-xl p-4 text-center shadow-md hover:scale-105 transition-all';
+      card.innerHTML = `
+        <img src="${s.img}" alt="${s.name}" class="mx-auto h-28 mb-3">
+        <h3 class="text-lg font-bold">${s.name}</h3>
+        <p class="text-sm text-gray-400 mb-2">${s.rarity}</p>
+        <p class="text-sm">Steam: <span class='text-[var(--highlight)]'>$${s.steam}</span></p>
+        <p class="text-sm">Buff: <span class='text-[var(--highlight)]'>$${s.buff}</span></p>
+        <p class="text-sm mb-3">CSFloat: <span class='text-[var(--highlight)]'>$${s.csfloat}</span></p>
+        <button onclick="addToCompare(${i})" class="bg-[var(--accent-color)] text-black px-3 py-1 rounded-md font-bold">Compare</button>
+      `;
+      grid.appendChild(card);
+    });
+
+    let compareList = [];
+
+    function addToCompare(i) {
+      const s = skins[i];
+      if (compareList.find(x => x.name === s.name)) return;
+      compareList.push(s);
+      updateCompareTable();
+      showTab('compare');
+    }
+
+    function updateCompareTable() {
+      compareBody.innerHTML = '';
+      compareList.forEach(s => {
+        const lowest = Math.min(s.steam, s.buff, s.csfloat);
+        compareBody.innerHTML += `
+          <tr class="border-t border-[#1f2430]">
+            <td class="p-2">${s.name}</td>
+            <td class="p-2">$${s.steam}</td>
+            <td class="p-2">$${s.buff}</td>
+            <td class="p-2">$${s.csfloat}</td>
+            <td class="p-2 text-[var(--highlight)]">$${lowest}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
