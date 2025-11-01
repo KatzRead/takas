@@ -1,424 +1,637 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KatzRead • Personal CS2 Seller</title>
-  <meta name="color-scheme" content="dark" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            display: ['Orbitron', 'ui-sans-serif', 'system-ui'],
-            sans: ['Inter', 'ui-sans-serif', 'system-ui']
-          },
-          colors: {
-            bg: '#0a0d14',
-            card: '#121824',
-            edge: '#1c2230',
-            accent: '#6A5ACD',
-            accent2: '#00B3FF',
-            neon: '#00FFFF',
-          },
-          boxShadow: {
-            glow: '0 0 30px rgba(0,179,255,0.35)',
-            glow2: '0 0 40px rgba(0,255,255,0.25)'
-          }
-        }
-      }
+import React, { useEffect, useMemo, useRef, useState, createContext, useContext } from "react";
+
+/**
+ * CS2 Trade Site Starter (Single-file React)
+ * - Dark theme, responsive, TR/EN language toggle
+ * - Pages: Marketplace, My Inventory, Compare, Admin, Contact
+ * - Admin panel: add/edit/remove items; import/export JSON
+ * - LocalStorage DB (no server). You can later hook to a real backend.
+ * - Hash router (works on GitHub Pages without special config)
+ *
+ * Next steps to deploy:
+ * 1) Create a new repo, add this file as App.jsx inside a Vite React project OR keep as-is in this Canvas.
+ * 2) Build for static hosting (Vite) and publish to GitHub Pages.
+ * 3) Until you wire a backend, all data lives in the browser (your machine).
+ */
+
+/************************************
+ * Tiny Hash Router
+ ************************************/
+const useHashRoute = () => {
+  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, "") || "market");
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash.replace(/^#\/?/, "") || "market");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const navigate = (to) => (window.location.hash = to);
+  return [route, navigate];
+};
+
+/************************************
+ * LocalStorage DB
+ ************************************/
+const DB_KEY = "cs2-trade-starter-db-v1";
+const defaultSkins = [
+  {
+    id: "ak-neon-rev-001",
+    name: "AK-47 | Neon Revolution",
+    marketName: "AK-47 | Neon Revolution (Factory New)",
+    weapon: "AK-47",
+    exterior: "Factory New",
+    float: 0.03,
+    price: 420.0,
+    currency: "USD",
+    image: "https://steamcommunity-a.akamaihd.net/economy/image/class/730/188530708/300x200",
+    rarity: "Covert",
+    collection: "Gamma 2 Case",
+    statTrak: false,
+  },
+  {
+    id: "m4a1-print-002",
+    name: "M4A1-S | Printstream",
+    marketName: "M4A1-S | Printstream (Minimal Wear)",
+    weapon: "M4A1-S",
+    exterior: "Minimal Wear",
+    float: 0.10,
+    price: 600.0,
+    currency: "USD",
+    image: "https://steamcommunity-a.akamaihd.net/economy/image/class/730/191426551/300x200",
+    rarity: "Covert",
+    collection: "Operation Broken Fang Case",
+    statTrak: true,
+  },
+  {
+    id: "awp-dragon-003",
+    name: "AWP | Dragon Lore",
+    marketName: "AWP | Dragon Lore (Field-Tested)",
+    weapon: "AWP",
+    exterior: "Field-Tested",
+    float: 0.24,
+    price: 8000.0,
+    currency: "USD",
+    image: "https://steamcommunity-a.akamaihd.net/economy/image/class/730/188530139/300x200",
+    rarity: "Covert",
+    collection: "Cobblestone Collection",
+    statTrak: false,
+  },
+];
+
+const loadDB = () => {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) {
+      const seed = { skins: defaultSkins, inventory: [], compare: [], language: "tr" };
+      localStorage.setItem(DB_KEY, JSON.stringify(seed));
+      return seed;
     }
-  </script>
-  <style>
-    :root{
-      --bg:#0a0d14; --card:#121824; --edge:#1c2230; --accent:#00b3ff; --accent2:#6a5acd; --text:#e5e7eb; --muted:#a7b0c0; --neon:#00ffff;
-    }
-    body{
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(106,90,205,.20), transparent),
-        radial-gradient(1200px 700px at 110% -20%, rgba(0,179,255,.18), transparent),
-        var(--bg);
-      color:var(--text);
-    }
-    .neonText{ text-shadow:0 0 10px rgba(0,179,255,.6),0 0 24px rgba(0,255,255,.25) }
-    .badge{ padding:2px 10px; border-radius:9999px; font-size:.70rem; letter-spacing:.02em }
-    .badge-Covert{ background:linear-gradient(90deg,#ff416c,#ff4b2b); color:#fff }
-    .badge-Classified{ background:linear-gradient(90deg,#ff6bcb,#ff46a0); color:#fff }
-    .badge-Restricted{ background:linear-gradient(90deg,#8a5cff,#6b41ff); color:#fff }
-    .badge-Contraband{ background:linear-gradient(90deg,#ffd36a,#ff8c00); color:#221400 }
-    .status-sale{ background:linear-gradient(90deg,#00ffa3,#00d9ff); color:#001b22 }
-    .status-sold{ background:#222d3f; color:#93a4c7 }
-    .grid-card{ transition:transform .2s ease, box-shadow .2s ease }
-    .grid-card:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,179,255,.18) }
-    .fade-in{ animation:fadeIn .55s ease both }
-    @keyframes fadeIn{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .shine{ position:relative; overflow:hidden }
-    .shine::after{ content:""; position:absolute; inset:auto -30% 0 -30%; top:-120%; height:200%; transform:rotate(25deg); background:linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent); transition:transform .6s ease }
-    .shine:hover::after{ transform:rotate(25deg) translateY(70%) }
-    .tooltip{ position:relative }
-    .tooltip:hover .tooltip-panel{ opacity:1; transform:translateY(0); pointer-events:auto }
-    .tooltip-panel{ position:absolute; z-index:30; top:120%; left:50%; transform:translate(-50%, -6px); opacity:0; pointer-events:none; background:#0f1522; border:1px solid var(--edge); border-radius:.7rem; padding:.5rem .7rem; white-space:nowrap; color:#cbd5e1; transition:all .16s ease }
-    /* Modal */
-    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,12,.55); backdrop-filter:blur(6px); z-index:60 }
-    .modal.open{ display:flex }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col font-sans">
-  <!-- NAVBAR -->
-  <nav class="sticky top-0 z-50 backdrop-blur bg-[#0a0d1499] border-b border-edge">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="h-8 w-8 rounded-md bg-gradient-to-br from-accent2 to-accent shadow-glow2"></div>
-        <h1 id="title" class="font-display text-2xl font-extrabold neonText">KatzRead • Satıcı</h1>
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("DB parse error", e);
+    return { skins: defaultSkins, inventory: [], compare: [], language: "tr" };
+  }
+};
+
+const saveDB = (db) => {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+};
+
+/************************************
+ * i18n (simple, inline)
+ ************************************/
+const strings = {
+  tr: {
+    marketplace: "Pazar",
+    myInventory: "Envanterim",
+    compare: "Karşılaştır",
+    admin: "Yönetim",
+    contact: "İletişim",
+    search: "Ara...",
+    addToInventory: "Envantere Ekle",
+    listedForSale: "Satılık",
+    price: "Fiyat",
+    currency: "Para Birimi",
+    weapon: "Silah",
+    exterior: "Dış Görünüm",
+    float: "Float",
+    rarity: "Nadirlik",
+    collection: "Koleksiyon",
+    statTrak: "StatTrak",
+    actions: "İşlemler",
+    edit: "Düzenle",
+    remove: "Sil",
+    addItem: "Ürün Ekle",
+    save: "Kaydet",
+    cancel: "İptal",
+    import: "İçe Aktar",
+    export: "Dışa Aktar",
+    uploadJSON: "JSON yükle",
+    listedOnly: "Sadece satılık",
+    language: "Dil",
+    darkTheme: "Koyu Tema",
+    yourSaleInventory: "Satılık Envanterin",
+    markForSale: "Satılık İşaretle",
+    setPrice: "Fiyat Belirle",
+    compareSelected: "Seçilenleri Karşılaştır",
+    reset: "Sıfırla",
+    empty: "Boş",
+    contactText: "Sponsor, işbirliği ve destek için iletişim linklerin:",
+    socials: "Sosyal Linkler",
+  },
+  en: {
+    marketplace: "Marketplace",
+    myInventory: "My Inventory",
+    compare: "Compare",
+    admin: "Admin",
+    contact: "Contact",
+    search: "Search...",
+    addToInventory: "Add to Inventory",
+    listedForSale: "Listed",
+    price: "Price",
+    currency: "Currency",
+    weapon: "Weapon",
+    exterior: "Exterior",
+    float: "Float",
+    rarity: "Rarity",
+    collection: "Collection",
+    statTrak: "StatTrak",
+    actions: "Actions",
+    edit: "Edit",
+    remove: "Remove",
+    addItem: "Add Item",
+    save: "Save",
+    cancel: "Cancel",
+    import: "Import",
+    export: "Export",
+    uploadJSON: "Upload JSON",
+    listedOnly: "Listed only",
+    language: "Language",
+    darkTheme: "Dark Theme",
+    yourSaleInventory: "Your Sale Inventory",
+    markForSale: "Mark for Sale",
+    setPrice: "Set Price",
+    compareSelected: "Compare Selected",
+    reset: "Reset",
+    empty: "Empty",
+    contactText: "For sponsorships, collabs and support, use your links:",
+    socials: "Social Links",
+  },
+};
+
+const LangCtx = createContext({ lang: "tr", t: (k) => k, setLang: () => {} });
+const useT = () => useContext(LangCtx);
+
+/************************************
+ * Global Store (no external libs)
+ ************************************/
+const StoreCtx = createContext(null);
+const useStore = () => useContext(StoreCtx);
+
+function StoreProvider({ children }) {
+  const [db, setDb] = useState(loadDB);
+  const update = (patch) => setDb((prev) => {
+    const next = typeof patch === "function" ? patch(prev) : { ...prev, ...patch };
+    saveDB(next);
+    return next;
+  });
+  const value = useMemo(() => ({ db, update }), [db]);
+  return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
+}
+
+/************************************
+ * UI Primitives
+ ************************************/
+const Card = ({ children, className = "" }) => (
+  <div className={`rounded-2xl shadow-lg bg-neutral-900 border border-neutral-800 ${className}`}>{children}</div>
+);
+const Button = ({ children, onClick, className = "", type = "button" }) => (
+  <button type={type} onClick={onClick} className={`px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 ${className}`}>
+    {children}
+  </button>
+);
+const Input = (props) => (
+  <input {...props} className={`w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-700 focus:outline-none ${props.className || ""}`} />
+);
+const Switch = ({ checked, onChange }) => (
+  <label className="inline-flex items-center cursor-pointer select-none">
+    <span className="mr-2 text-sm text-neutral-400">Off</span>
+    <div className="relative">
+      <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <div className={`block w-12 h-7 rounded-full ${checked ? "bg-emerald-600" : "bg-neutral-700"}`}></div>
+      <div className={`dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition ${checked ? "translate-x-5" : ""}`}></div>
+    </div>
+  </label>
+);
+
+/************************************
+ * Navbar
+ ************************************/
+function Navbar({ navigate }) {
+  const { db } = useStore();
+  const { lang, setLang } = useT();
+  const t = strings[lang];
+  const link = (to, label) => (
+    <a href={`#${to}`} className="px-3 py-2 rounded-xl hover:bg-neutral-800 border border-transparent hover:border-neutral-700">
+      {label}
+    </a>
+  );
+  return (
+    <div className="sticky top-0 z-40 backdrop-blur bg-black/60 border-b border-neutral-800">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2">
+        <div className="text-xl font-bold">takas.yt</div>
+        <div className="ml-4 flex items-center gap-1 text-sm">
+          {link("market", t.marketplace)}
+          {link("inventory", t.myInventory)}
+          {link("compare", t.compare)}
+          {link("admin", t.admin)}
+          {link("contact", t.contact)}
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-sm">
+            <option value="tr">TR</option>
+            <option value="en">EN</option>
+          </select>
+        </div>
       </div>
-      <div class="flex items-center gap-6">
-        <ul class="hidden md:flex items-center gap-8 text-[15px]">
-          <li><button class="hover:text-accent2 transition" onclick="showTab('home')" id="navHome">Ana Sayfa</button></li>
-          <li><button class="hover:text-accent2 transition" onclick="showTab('inventory')" id="navInventory">Envanter</button></li>
-          <li><button class="hover:text-accent2 transition" onclick="showTab('compare')" id="navCompare">Karşılaştır</button></li>
-          <li><button class="hover:text-accent2 transition" onclick="showTab('sales')" id="navSales">Satıldı</button></li>
-          <li><button class="hover:text-accent2 transition" onclick="showTab('contact')" id="navContact">İletişim</button></li>
+    </div>
+  );
+}
+
+/************************************
+ * Marketplace
+ ************************************/
+function Marketplace() {
+  const { db, update } = useStore();
+  const { lang } = useT();
+  const t = strings[lang];
+  const [q, setQ] = useState("");
+  const [rarity, setRarity] = useState("all");
+
+  const filtered = db.skins.filter((s) => {
+    const text = `${s.name} ${s.weapon} ${s.exterior} ${s.collection}`.toLowerCase();
+    const okQ = text.includes(q.toLowerCase());
+    const okR = rarity === "all" || s.rarity === rarity;
+    return okQ && okR;
+  });
+
+  const addToInv = (skin) => {
+    update((prev) => ({
+      ...prev,
+      inventory: [
+        ...prev.inventory,
+        { id: skin.id, price: skin.price, listed: false, currency: skin.currency },
+      ],
+    }));
+  };
+
+  const toggleCompare = (id) => {
+    update((prev) => {
+      const inList = prev.compare.includes(id);
+      const next = inList ? prev.compare.filter((x) => x !== id) : [...prev.compare, id].slice(-4);
+      return { ...prev, compare: next };
+    });
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-3 mb-4">
+        <Input placeholder={t.search} value={q} onChange={(e) => setQ(e.target.value)} />
+        <select value={rarity} onChange={(e) => setRarity(e.target.value)} className="bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2">
+          <option value="all">All Rarities</option>
+          <option>Consumer</option>
+          <option>Industrial</option>
+          <option>Mil-Spec</option>
+          <option>Restricted</option>
+          <option>Classified</option>
+          <option>Covert</option>
+          <option>Exceedingly Rare</option>
+        </select>
+        <a href="#compare" className="ml-auto">
+          <Button>{t.compare} ({db.compare.length})</Button>
+        </a>
+      </div>
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filtered.map((s) => (
+          <Card key={s.id} className="overflow-hidden">
+            <div className="aspect-[3/2] bg-neutral-950 flex items-center justify-center">
+              <img src={s.image} alt={s.marketName} className="max-h-full" />
+            </div>
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold">{s.name}</div>
+                <span className="text-xs px-2 py-1 rounded-full border border-neutral-700">{s.rarity}</span>
+              </div>
+              <div className="text-sm text-neutral-400 mt-1">{s.exterior} • Float {s.float}</div>
+              <div className="mt-2 font-bold">{s.price} {s.currency}</div>
+              <div className="mt-3 flex gap-2">
+                <Button onClick={() => addToInv(s)} className="flex-1">{t.addToInventory}</Button>
+                <Button onClick={() => toggleCompare(s.id)} className={`${db.compare.includes(s.id) ? "ring-2 ring-emerald-500" : ""}`}>★</Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-neutral-400">{t.empty}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/************************************
+ * Inventory (with For Sale toggle & pricing)
+ ************************************/
+function Inventory() {
+  const { db, update } = useStore();
+  const { lang } = useT();
+  const t = strings[lang];
+  const [listedOnly, setListedOnly] = useState(false);
+
+  const items = db.inventory
+    .map((inv) => ({ inv, skin: db.skins.find((s) => s.id === inv.id) }))
+    .filter(({ inv }) => (listedOnly ? inv.listed : true));
+
+  const setInv = (id, patch) => {
+    update((prev) => ({
+      ...prev,
+      inventory: prev.inventory.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+    }));
+  };
+
+  const removeInv = (id) => {
+    update((prev) => ({ ...prev, inventory: prev.inventory.filter((x) => x.id !== id) }));
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-sm text-neutral-400">{t.listedOnly}</span>
+        <Switch checked={listedOnly} onChange={setListedOnly} />
+      </div>
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {items.map(({ inv, skin }) => (
+          <Card key={inv.id} className="overflow-hidden">
+            <div className="aspect-[3/2] bg-neutral-950 flex items-center justify-center">
+              <img src={skin?.image} alt={skin?.marketName} className="max-h-full" />
+            </div>
+            <div className="p-4 space-y-2">
+              <div className="font-semibold">{skin?.name || inv.id}</div>
+              <div className="text-sm text-neutral-400">{skin?.exterior} • Float {skin?.float}</div>
+              <div className="flex items-center gap-2">
+                <Input type="number" step="0.01" value={inv.price} onChange={(e) => setInv(inv.id, { price: parseFloat(e.target.value || 0) })} />
+                <Input value={inv.currency} onChange={(e) => setInv(inv.id, { currency: e.target.value })} className="w-28" />
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="inline-flex gap-2 items-center text-sm">
+                  <input type="checkbox" checked={inv.listed} onChange={(e) => setInv(inv.id, { listed: e.target.checked })} />
+                  {t.markForSale}
+                </label>
+                <Button onClick={() => removeInv(inv.id)} className="ml-auto">Remove</Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+        {items.length === 0 && (
+          <div className="text-neutral-400">{t.empty}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/************************************
+ * Compare Page (up to 4)
+ ************************************/
+function Compare() {
+  const { db, update } = useStore();
+  const { lang } = useT();
+  const t = strings[lang];
+  const selected = db.compare.map((id) => db.skins.find((s) => s.id === id)).filter(Boolean);
+
+  const reset = () => update((prev) => ({ ...prev, compare: [] }));
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-4">
+        <a href="#market"><Button>{t.compareSelected}</Button></a>
+        <Button onClick={reset} className="ml-auto">{t.reset}</Button>
+      </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {selected.map((s) => (
+          <Card key={s.id} className="overflow-hidden">
+            <div className="aspect-[3/2] bg-neutral-950 flex items-center justify-center">
+              <img src={s.image} alt={s.marketName} className="max-h-full" />
+            </div>
+            <div className="p-4 space-y-1 text-sm">
+              <div className="font-semibold">{s.name}</div>
+              <div>{t.weapon}: {s.weapon}</div>
+              <div>{t.exterior}: {s.exterior}</div>
+              <div>{t.float}: {s.float}</div>
+              <div>{t.rarity}: {s.rarity}</div>
+              <div>{t.collection}: {s.collection}</div>
+              <div className="font-bold mt-2">{t.price}: {s.price} {s.currency}</div>
+            </div>
+          </Card>
+        ))}
+        {selected.length === 0 && <div className="text-neutral-400">{t.empty}</div>}
+      </div>
+    </div>
+  );
+}
+
+/************************************
+ * Admin Panel
+ ************************************/
+function Admin() {
+  const { db, update } = useStore();
+  const { lang } = useT();
+  const t = strings[lang];
+  const [editing, setEditing] = useState(null);
+  const fileRef = useRef();
+
+  const blank = {
+    id: "",
+    name: "",
+    marketName: "",
+    weapon: "",
+    exterior: "Factory New",
+    float: 0,
+    price: 0,
+    currency: "USD",
+    image: "",
+    rarity: "Mil-Spec",
+    collection: "",
+    statTrak: false,
+  };
+
+  const [form, setForm] = useState(blank);
+
+  const onEdit = (skin) => {
+    setEditing(skin.id);
+    setForm(skin);
+  };
+
+  const onRemove = (id) => {
+    update((prev) => ({
+      ...prev,
+      skins: prev.skins.filter((s) => s.id !== id),
+      inventory: prev.inventory.filter((x) => x.id !== id),
+      compare: prev.compare.filter((x) => x !== id),
+    }));
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    update((prev) => {
+      const exists = prev.skins.find((s) => s.id === form.id);
+      const skins = exists
+        ? prev.skins.map((s) => (s.id === form.id ? form : s))
+        : [...prev.skins, form];
+      return { ...prev, skins };
+    });
+    setEditing(null);
+    setForm(blank);
+  };
+
+  const onExport = () => {
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cs2-trade-db.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onImport = async (file) => {
+    if (!file) return;
+    const txt = await file.text();
+    try {
+      const json = JSON.parse(txt);
+      if (!json || typeof json !== "object") throw new Error("Invalid JSON");
+      update(json);
+    } catch (e) {
+      alert("Invalid JSON file");
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <Button onClick={onExport}>{t.export}</Button>
+        <input type="file" accept="application/json" ref={fileRef} className="hidden" onChange={(e) => onImport(e.target.files?.[0])} />
+        <Button onClick={() => fileRef.current?.click()}>{t.import}</Button>
+      </div>
+
+      <Card className="p-4 mb-8">
+        <div className="font-semibold mb-3">{editing ? `${t.edit}: ${editing}` : t.addItem}</div>
+        <form onSubmit={onSubmit} className="grid md:grid-cols-3 gap-3">
+          <Input placeholder="id" value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} required />
+          <Input placeholder="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <Input placeholder="marketName" value={form.marketName} onChange={(e) => setForm({ ...form, marketName: e.target.value })} />
+          <Input placeholder="weapon" value={form.weapon} onChange={(e) => setForm({ ...form, weapon: e.target.value })} />
+          <Input placeholder="exterior" value={form.exterior} onChange={(e) => setForm({ ...form, exterior: e.target.value })} />
+          <Input type="number" step="0.0001" placeholder="float" value={form.float} onChange={(e) => setForm({ ...form, float: parseFloat(e.target.value || 0) })} />
+          <Input type="number" step="0.01" placeholder="price" value={form.price} onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value || 0) })} />
+          <Input placeholder="currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <Input placeholder="image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+          <Input placeholder="rarity" value={form.rarity} onChange={(e) => setForm({ ...form, rarity: e.target.value })} />
+          <Input placeholder="collection" value={form.collection} onChange={(e) => setForm({ ...form, collection: e.target.value })} />
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={form.statTrak} onChange={(e) => setForm({ ...form, statTrak: e.target.checked })} /> StatTrak
+          </label>
+          <div className="md:col-span-3 flex gap-3">
+            <Button type="submit">{editing ? strings[lang].save : strings[lang].addItem}</Button>
+            {editing && (
+              <Button type="button" onClick={() => { setEditing(null); setForm(blank); }}>{strings[lang].cancel}</Button>
+            )}
+          </div>
+        </form>
+      </Card>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {db.skins.map((s) => (
+          <Card key={s.id} className="overflow-hidden">
+            <div className="aspect-[3/2] bg-neutral-950 flex items-center justify-center">
+              <img src={s.image} alt={s.marketName} className="max-h-full" />
+            </div>
+            <div className="p-4 space-y-1">
+              <div className="font-semibold">{s.name}</div>
+              <div className="text-sm text-neutral-400">{s.exterior} • Float {s.float}</div>
+              <div className="font-bold">{s.price} {s.currency}</div>
+              <div className="flex gap-2 mt-2">
+                <Button onClick={() => onEdit(s)}>{strings[lang].edit}</Button>
+                <Button onClick={() => onRemove(s.id)}>{strings[lang].remove}</Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/************************************
+ * Contact Page
+ ************************************/
+function Contact() {
+  const { lang } = useT();
+  const t = strings[lang];
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <Card className="p-6">
+        <div className="text-xl font-semibold mb-2">{t.contact}</div>
+        <p className="text-neutral-300 mb-4">{t.contactText}</p>
+        <ul className="space-y-2">
+          <li><a className="underline" href="https://twitch.tv/yourname" target="_blank" rel="noreferrer">Twitch</a></li>
+          <li><a className="underline" href="https://kick.com/yourname" target="_blank" rel="noreferrer">Kick</a></li>
+          <li><a className="underline" href="https://x.com/yourname" target="_blank" rel="noreferrer">Twitter/X</a></li>
+          <li><a className="underline" href="mailto:you@example.com">you@example.com</a></li>
         </ul>
-        <button class="text-accent2 font-semibold" onclick="toggleLang()">🌍 <span id="langLabel">TR</span></button>
-      </div>
+      </Card>
     </div>
-  </nav>
+  );
+}
 
-  <!-- HERO -->
-  <section id="home" class="tab fade-in max-w-7xl mx-auto px-6 py-16 md:py-24 text-center">
-    <h2 id="heroTitle" class="font-display text-4xl md:text-6xl font-extrabold neonText">Kişisel CS2 Mağazan</h2>
-    <p id="heroDesc" class="mt-4 md:mt-6 text-lg text-slate-300 max-w-2xl mx-auto">KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve <span class="text-accent2 font-semibold">avantajlı fiyat</span> odaklı bireysel satış vitrini.</p>
-    <div class="mt-8 grid max-w-3xl mx-auto md:grid-cols-3 gap-4">
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
-        <div class="text-slate-400 text-sm" id="metricItemsLabel">İlan Sayısı</div>
-        <div id="stat-listed" class="mt-1 text-3xl font-extrabold">0</div>
-      </div>
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
-        <div class="text-slate-400 text-sm" id="metricRevenueLabel">Potansiyel Gelir</div>
-        <div id="stat-revenue" class="mt-1 text-3xl font-extrabold">$0.00</div>
-      </div>
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
-        <div class="text-slate-400 text-sm" id="metricDiscountLabel">Piyasa Altı Ortalama</div>
-        <div id="stat-discount" class="mt-1 text-3xl font-extrabold">0%</div>
-      </div>
-    </div>
-    <div class="mt-8 flex justify-center gap-4">
-      <button onclick="showTab('inventory')" id="btnInventory" class="px-5 py-3 rounded-xl bg-card border border-edge hover:border-accent2 hover:shadow-glow transition">Envanteri Gör</button>
-      <button onclick="showTab('compare')" id="btnCompare" class="px-5 py-3 rounded-xl bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">Karşılaştır</button>
-    </div>
-  </section>
+/************************************
+ * Root App
+ ************************************/
+export default function App() {
+  const [route] = useHashRoute();
+  const [lang, setLang] = useState(() => loadDB().language || "tr");
+  const { db, update } = useStoreShim();
 
-  <!-- INVENTORY -->
-  <section id="inventory" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-      <h3 id="inventoryTitle" class="font-display text-3xl font-extrabold">Envanter</h3>
-      <div class="flex gap-3 items-center">
-        <label class="sr-only" for="filter-status">Status</label>
-        <select id="filter-status" class="bg-card border border-edge rounded-lg px-3 py-2">
-          <option value="all">All</option>
-          <option value="For Sale">For Sale</option>
-          <option value="Sold">Sold</option>
-        </select>
-        <label class="sr-only" for="sort-by">Sort</label>
-        <select id="sort-by" class="bg-card border border-edge rounded-lg px-3 py-2">
-          <option value="name">Sort: Name</option>
-          <option value="myPrice">Sort: My Price</option>
-          <option value="discount">Sort: Discount %</option>
-        </select>
-      </div>
-    </div>
-    <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-  </section>
+  useEffect(() => {
+    update((prev) => ({ ...prev, language: lang }));
+  }, [lang]);
 
-  <!-- COMPARE -->
-  <section id="compare" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
-    <h3 id="compareTitle" class="font-display text-3xl font-extrabold mb-6">Fiyat Karşılaştır</h3>
-    <div class="overflow-x-auto rounded-xl border border-edge bg-card">
-      <table class="w-full text-left">
-        <thead class="bg-[#0f1522] text-neon">
-          <tr>
-            <th class="p-3" id="thSkin">Skin</th>
-            <th class="p-3">Steam ($)</th>
-            <th class="p-3">Buff ($)</th>
-            <th class="p-3">CSFloat ($)</th>
-            <th class="p-3" id="thMyPrice">Benim Fiyatım</th>
-            <th class="p-3" id="thBelow">Piyasa Altı</th>
-          </tr>
-        </thead>
-        <tbody id="compare-body" class="text-slate-200"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- SOLD LIST -->
-  <section id="sales" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
-    <h3 id="salesTitle" class="font-display text-3xl font-extrabold mb-6">Satış Geçmişi (Mock)</h3>
-    <ul id="sold-list" class="grid md:grid-cols-2 gap-4"></ul>
-  </section>
-
-  <!-- CONTACT -->
-  <section id="contact" class="tab hidden fade-in max-w-4xl mx-auto px-6 py-10">
-    <h3 id="contactTitle" class="font-display text-3xl font-extrabold mb-6">İletişim</h3>
-    <div class="rounded-2xl bg-card border border-edge p-6">
-      <p id="contactText" class="text-slate-300">Satın almak veya bilgi almak için bana ulaş:</p>
-      <ul class="mt-3 space-y-2">
-        <li>Twitter/X: <a class="text-accent2 hover:underline" href="https://x.com/KatzRead" target="_blank">@KatzRead</a></li>
-        <li>Steam: <a class="text-accent2 hover:underline" href="#" target="_blank">steamcommunity.com/id/KatzRead</a></li>
-        <li>Discord: <span class="text-neon font-semibold">katzread</span></li>
-      </ul>
-      <p class="mt-4 text-xs text-slate-500" id="contactNote">Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.</p>
-    </div>
-  </section>
-
-  <!-- MODAL (Details) -->
-  <div id="detailsModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="max-w-lg w-full rounded-2xl bg-card border border-edge p-5 shadow-glow fade-in">
-      <div class="flex justify-between items-start gap-3">
-        <h4 id="modalTitle" class="font-display text-xl font-bold">Item</h4>
-        <button class="px-3 py-1 rounded-lg border border-edge hover:border-accent2" onclick="closeModal()">✕</button>
-      </div>
-      <div class="mt-4 grid grid-cols-3 gap-4">
-        <div class="col-span-1 flex items-center justify-center rounded-xl bg-[#0f1522] border border-edge h-28">
-          <img id="modalImg" alt="skin" class="max-h-24 object-contain" />
+  return (
+    <LangCtx.Provider value={{ lang, setLang }}>
+      <StoreProvider>
+        <div className="min-h-screen bg-black text-neutral-100">
+          <Navbar />
+          {route === "market" && <Marketplace />}
+          {route === "inventory" && <Inventory />}
+          {route === "compare" && <Compare />}
+          {route === "admin" && <Admin />}
+          {route === "contact" && <Contact />}
+          <footer className="border-t border-neutral-800 text-center text-xs text-neutral-500 py-6">© {new Date().getFullYear()} takas.yt — CS2 Item Trading Starter</footer>
         </div>
-        <div class="col-span-2 text-sm space-y-1">
-          <div><span class="text-slate-400" id="mRarityLabel">Rarity</span>: <span id="modalRarity" class="badge"></span></div>
-          <div><span class="text-slate-400">Steam</span>: <span id="modalSteam" class="font-semibold"></span></div>
-          <div><span class="text-slate-400">Buff</span>: <span id="modalBuff" class="font-semibold"></span></div>
-          <div><span class="text-slate-400">CSFloat</span>: <span id="modalCSF" class="font-semibold"></span></div>
-          <div><span class="text-slate-400" id="mMyPriceLabel">My Price</span>: <span id="modalMy" class="font-semibold text-accent2"></span></div>
-        </div>
-      </div>
-      <div class="mt-4 text-sm text-slate-400" id="modalNote">Bu ürün demo amaçlı listelenmiştir.</div>
-      <div class="mt-5 flex justify-end gap-2">
-        <a href="#contact" onclick="closeModal(); showTab('contact')" id="modalDmBtn" class="px-4 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">DM</a>
-        <button onclick="closeModal()" id="modalCloseBtn" class="px-4 py-2 rounded-lg border border-edge bg-[#0f1522] hover:border-accent2">Kapat</button>
-      </div>
-    </div>
-  </div>
+      </StoreProvider>
+    </LangCtx.Provider>
+  );
+}
 
-  <footer class="mt-auto text-center text-slate-400 py-8 border-t border-edge">© 2025 KatzRead Personal Seller — Mock</footer>
-
-  <script>
-    // ---------- DATA (with CDN images + graceful fallback) ----------
-    const items = [
-      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_asimov_light_large.1fbe5c0d.png', myPrice: 38.0, steam: 45.5, buff: 40.3, csfloat: 42.7, status:'For Sale' },
-      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', myPrice: 49.5, steam: 58.2, buff: 52.9, csfloat: 54.0, status:'For Sale' },
-      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', myPrice: 59.0, steam: 67.9, buff: 61.4, csfloat: 63.0, status:'For Sale' },
-      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', myPrice: 865.0, steam: 900.0, buff: 880.0, csfloat: 870.5, status:'For Sale' },
-      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', myPrice: 34.0, steam: 40.1, buff: 35.6, csfloat: 37.2, status:'For Sale' },
-      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', myPrice: 10.2, steam: 12.3, buff: 11.1, csfloat: 11.6, status:'For Sale' },
-      { name: 'AWP | Neo-Noir', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_neonoir_light_large.0639b9a0.png', myPrice: 31.5, steam: 36.8, buff: 33.4, csfloat: 34.1, status:'For Sale' },
-      { name: 'AK-47 | The Empress', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_empress_light_large.2f6a3e9b.png', myPrice: 24.9, steam: 28.9, buff: 26.2, csfloat: 27.1, status:'For Sale' },
-      { name: 'M4A4 | Howl', rarity: 'Contraband', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_m4a1_cu_m4a4_howling_light_large.9cf1c1e7.png', myPrice: 1669.0, steam: 1700.0, buff: 1650.0, csfloat: 1685.0, status:'For Sale' },
-      { name: 'AK-47 | Gold Arabesque', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_gold_arabesque_light_large.4b8f1f9e.png', myPrice: 509.0, steam: 540.0, buff: 515.0, csfloat: 520.0, status:'Sold' },
-      { name: 'AWP | Asiimov', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_asimov_light_large.aa13d1f0.png', myPrice: 106.0, steam: 120.0, buff: 110.0, csfloat: 115.0, status:'Sold' },
-      { name: 'Glock-18 | Water Elemental', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_glock_cu_water_elemental_light_large.9a9f0f9d.png', myPrice: 5.7, steam: 6.9, buff: 6.1, csfloat: 6.3, status:'For Sale' }
-    ];
-
-    // ---------- I18N ----------
-    const TR = {
-      title: 'KatzRead • Satıcı', navHome:'Ana Sayfa', navInventory:'Envanter', navCompare:'Karşılaştır', navSales:'Satıldı', navContact:'İletişim',
-      heroTitle:'Kişisel CS2 Mağazan', heroDesc:'KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve avantajlı fiyat odaklı bireysel satış vitrini.',
-      metricItemsLabel:'İlan Sayısı', metricRevenueLabel:'Potansiyel Gelir', metricDiscountLabel:'Piyasa Altı Ortalama',
-      btnInventory:'Envanteri Gör', btnCompare:'Karşılaştır',
-      inventoryTitle:'Envanter', compareTitle:'Fiyat Karşılaştır', salesTitle:'Satış Geçmişi (Mock)',
-      thSkin:'Skin', thMyPrice:'Benim Fiyatım', thBelow:'Piyasa Altı',
-      contactTitle:'İletişim', contactText:'Satın almak veya bilgi almak için bana ulaş:', contactNote:'Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.',
-      rarity:'Nadirlik', myPrice:'Benim Fiyatım', demoItemNote:'Bu ürün demo amaçlı listelenmiştir.', close:'Kapat', dm:'DM'
-    };
-    const EN = {
-      title:'KatzRead • Seller', navHome:'Home', navInventory:'Inventory', navCompare:'Compare', navSales:'Sold', navContact:'Contact',
-      heroTitle:'My Personal CS2 Store', heroDesc:'Listed skins by KatzRead. Focused on individual selling with best market comparison.',
-      metricItemsLabel:'Items Listed', metricRevenueLabel:'Potential Revenue', metricDiscountLabel:'Avg. Below Market',
-      btnInventory:'View Inventory', btnCompare:'Open Compare',
-      inventoryTitle:'Inventory', compareTitle:'Compare Prices', salesTitle:'Sold History (Mock)',
-      thSkin:'Skin', thMyPrice:'My Price', thBelow:'Below Market',
-      contactTitle:'Contact', contactText:'Reach out for purchase or inquiries:', contactNote:'This site is a demo/mock; prices and stock are representative.',
-      rarity:'Rarity', myPrice:'My Price', demoItemNote:'This item is listed for demo purposes.', close:'Close', dm:'DM'
-    };
-    const TEXT_IDS = ['title','navHome','navInventory','navCompare','navSales','navContact','heroTitle','heroDesc','metricItemsLabel','metricRevenueLabel','metricDiscountLabel','btnInventory','btnCompare','inventoryTitle','compareTitle','salesTitle','thSkin','thMyPrice','thBelow','contactTitle','contactText','contactNote','mRarityLabel','mMyPriceLabel','modalNote','modalCloseBtn','modalDmBtn'];
-    let currentLang = (localStorage.getItem('lang')||'tr');
-
-    function applyLang(){
-      const t = currentLang==='tr' ? TR : EN;
-      document.documentElement.lang = currentLang==='tr'?'tr':'en';
-      document.getElementById('langLabel').textContent = currentLang.toUpperCase();
-      // Map keys to element IDs
-      const map = {
-        title:'title', navHome:'navHome', navInventory:'navInventory', navCompare:'navCompare', navSales:'navSales', navContact:'navContact',
-        heroTitle:'heroTitle', heroDesc:'heroDesc', metricItemsLabel:'metricItemsLabel', metricRevenueLabel:'metricRevenueLabel', metricDiscountLabel:'metricDiscountLabel',
-        btnInventory:'btnInventory', btnCompare:'btnCompare', inventoryTitle:'inventoryTitle', compareTitle:'compareTitle', salesTitle:'salesTitle',
-        thSkin:'thSkin', thMyPrice:'thMyPrice', thBelow:'thBelow',
-        contactTitle:'contactTitle', contactText:'contactText', contactNote:'contactNote',
-        rarity:'mRarityLabel', myPrice:'mMyPriceLabel', demoItemNote:'modalNote', close:'modalCloseBtn', dm:'modalDmBtn'
-      };
-      for(const k in map){ const el = document.getElementById(map[k]); if(el){ el.textContent = t[k]; } }
-    }
-
-    function toggleLang(){ currentLang = currentLang==='tr'?'en':'tr'; localStorage.setItem('lang', currentLang); applyLang(); renderCompare(); renderInventory(); renderSold(); }
-
-    // ---------- Helpers ----------
-    const invGrid = document.getElementById('inventory-grid');
-    const compareBody = document.getElementById('compare-body');
-    const soldList = document.getElementById('sold-list');
-
-    const money = v => '$' + v.toFixed(2);
-    const marketLow = it => Math.min(it.steam, it.buff, it.csfloat);
-    const belowPct = it => ((marketLow(it) - it.myPrice) / marketLow(it)) * 100; // positive => below
-
-    function imageWithFallback(src, alt){
-      const img = new Image();
-      img.alt = alt;
-      img.className = 'max-h-28 object-contain';
-      img.src = src;
-      img.onerror = () => {
-        const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='100%' height='100%' fill='%230f1522'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23a7b0c0' font-family='Inter' font-size='14'>${alt.replace(/&/g,'&amp;')}</text></svg>`);
-        img.src = `data:image/svg+xml;charset=UTF-8,${svg}`;
-      };
-      return img;
-    }
-
-    // ---------- Stats ----------
-    function renderStats(){
-      const listed = items.filter(i=>i.status==='For Sale');
-      const revenue = listed.reduce((s,i)=>s+i.myPrice,0);
-      const avgBelow = listed.length? (listed.reduce((s,i)=>s + belowPct(i),0)/listed.length) : 0;
-      document.getElementById('stat-listed').textContent = listed.length;
-      document.getElementById('stat-revenue').textContent = money(revenue);
-      document.getElementById('stat-discount').textContent = (avgBelow>0?'-':'') + Math.abs(avgBelow).toFixed(1) + '%';
-    }
-
-    // ---------- Inventory ----------
-    function renderInventory(){
-      const status = document.getElementById('filter-status').value;
-      const sortBy = document.getElementById('sort-by').value;
-      let data = items.slice();
-      if(status!=='all') data = data.filter(i=>i.status===status);
-      if(sortBy==='name') data.sort((a,b)=>a.name.localeCompare(b.name));
-      if(sortBy==='myPrice') data.sort((a,b)=>a.myPrice-b.myPrice);
-      if(sortBy==='discount') data.sort((a,b)=>belowPct(b)-belowPct(a));
-
-      invGrid.innerHTML = '';
-      data.forEach((s, i) => {
-        const low = marketLow(s);
-        const disc = belowPct(s);
-        const statusBadge = s.status==='For Sale' ? 'status-sale' : 'status-sold';
-        const statusText = s.status==='For Sale' ? (currentLang==='tr'?'Satışta':'For Sale') : (currentLang==='tr'?'Satıldı':'Sold');
-
-        const card = document.createElement('div');
-        card.className = 'grid-card relative rounded-2xl border border-edge bg-card p-4 shadow-sm fade-in';
-        card.innerHTML = `
-          <div class="absolute right-3 top-3 badge ${statusBadge}">${statusText}</div>
-          <div class="absolute left-3 top-3 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</div>
-          <div class="flex items-center justify-center h-36 mb-3 bg-[#0f1522] rounded-xl border border-edge"></div>
-          <h4 class="font-semibold leading-snug">${s.name}</h4>
-          <div class="mt-3 grid grid-cols-4 gap-2 text-sm">
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Steam</div><div class="font-semibold">${money(s.steam)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Buff</div><div class="font-semibold">${money(s.buff)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">CSFloat</div><div class="font-semibold">${money(s.csfloat)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">${currentLang==='tr'?'Benim Fiyatım':'My Price'}</div><div class="font-semibold text-accent2">${money(s.myPrice)}</div></div>
-          </div>
-          <div class="mt-3 flex items-center justify-between">
-            <div class="text-sm tooltip ${disc>0 ? 'text-green-400' : 'text-slate-300'}">
-              ${disc>0?'-':''}${Math.abs(disc).toFixed(1)}% ${currentLang==='tr'?'piyasa':'below market'}
-              <span class="tooltip-panel">${currentLang==='tr'?'Piyasa en düşük: ':'Market low: '}${money(low)}</span>
-            </div>
-            <div class="flex gap-2">
-              <button class="px-3 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow shine" onclick="openModal(${i})">Details</button>
-              <a href="#contact" onclick="showTab('contact')" class="px-3 py-2 rounded-lg border border-edge bg-[#0f1522] hover:border-accent2">DM</a>
-            </div>
-          </div>
-        `;
-        // image container
-        const imgWrap = card.querySelector('.h-36');
-        imgWrap.appendChild(imageWithFallback(s.img, s.name));
-        invGrid.appendChild(card);
-      });
-    }
-
-    // ---------- Compare ----------
-    function renderCompare(){
-      compareBody.innerHTML = '';
-      items.filter(x=>x.status==='For Sale').forEach(s => {
-        const low = marketLow(s); const disc = belowPct(s);
-        compareBody.innerHTML += `
-          <tr class="border-t border-edge hover:bg-[#0f1522]">
-            <td class="p-3 font-medium">${s.name} <span class="ml-2 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</span></td>
-            <td class="p-3">${money(s.steam)}</td>
-            <td class="p-3">${money(s.buff)}</td>
-            <td class="p-3">${money(s.csfloat)}</td>
-            <td class="p-3 font-semibold">${money(s.myPrice)}</td>
-            <td class="p-3 ${disc>0?'text-green-400':''}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}%</td>
-          </tr>`;
-      });
-    }
-
-    // ---------- Sold ----------
-    function renderSold(){
-      soldList.innerHTML = '';
-      items.filter(i=>i.status==='Sold').forEach(s=>{
-        const li = document.createElement('li');
-        li.className = 'rounded-2xl bg-card border border-edge p-4 flex gap-4 items-center fade-in';
-        li.innerHTML = `
-          <div class="h-16 w-16 rounded-xl bg-[#0f1522] border border-edge flex items-center justify-center"></div>
-          <div class="flex-1">
-            <div class="font-semibold">${s.name}</div>
-            <div class="text-sm text-slate-400">${currentLang==='tr'?'Satış fiyatı:':'Sold at:'} ${money(s.myPrice)}</div>
-          </div>
-          <span class="badge status-sold">${currentLang==='tr'?'SATILDI':'SOLD'}</span>
-        `;
-        li.querySelector('.h-16').appendChild(imageWithFallback(s.img, s.name));
-        soldList.appendChild(li);
-      })
-    }
-
-    // ---------- Modal ----------
-    const modal = document.getElementById('detailsModal');
-    function openModal(i){
-      const t = currentLang==='tr' ? TR : EN;
-      const s = items[i];
-      document.getElementById('modalTitle').textContent = s.name;
-      const rarity = document.getElementById('modalRarity');
-      rarity.className = 'badge badge-' + s.rarity.replace(/\s/g,'');
-      rarity.textContent = s.rarity;
-      document.getElementById('modalSteam').textContent = money(s.steam);
-      document.getElementById('modalBuff').textContent = money(s.buff);
-      document.getElementById('modalCSF').textContent = money(s.csfloat);
-      document.getElementById('modalMy').textContent = money(s.myPrice);
-      const img = imageWithFallback(s.img, s.name); img.className = 'max-h-24 object-contain';
-      const wrap = document.getElementById('modalImg');
-      wrap.replaceWith(img); img.id = 'modalImg';
-      applyLang();
-      modal.classList.add('open');
-      modal.setAttribute('aria-hidden','false');
-    }
-    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
-    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
-
-    // ---------- Tabs ----------
-    function showTab(id){
-      document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      if(id==='inventory') renderInventory();
-      if(id==='compare') renderCompare();
-      if(id==='sales') renderSold();
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
-    window.showTab = showTab; // expose for HTML onclick
-    window.toggleLang = toggleLang;
-    window.openModal = openModal; window.closeModal = closeModal;
-
-    // ---------- Init ----------
-    applyLang();
-    renderStats();
-    renderInventory();
-    renderCompare();
-  </script>
-</body>
-</html>
+/************************************
+ * Store shim to ensure language load
+ ************************************/
+function useStoreShim() {
+  // A very small shim to let App set the initial language before StoreProvider mount
+  const [db, setDb] = useState(loadDB());
+  const update = (patch) => setDb((prev) => {
+    const next = typeof patch === "function" ? patch(prev) : { ...prev, ...patch };
+    saveDB(next);
+    return next;
+  });
+  return { db, update };
+}
