@@ -3,140 +3,288 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KatzTrade | CS2 Mock Site</title>
+  <title>KatzRead • Personal CS2 Seller</title>
+  <meta name="color-scheme" content="dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Orbitron', 'ui-sans-serif', 'system-ui'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui']
+          },
+          colors: {
+            bg: '#0a0d14',
+            card: '#121824',
+            edge: '#1c2230',
+            accent: '#6A5ACD',
+            accent2: '#00B3FF',
+            neon: '#00FFFF',
+          },
+          boxShadow: {
+            glow: '0 0 30px rgba(0,179,255,0.35)',
+            glow2: '0 0 40px rgba(0,255,255,0.25)'
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    :root {
-      --bg-color: #0e1017;
-      --card-color: #171a22;
-      --accent-color: #00b3ff;
-      --text-color: #e0e0e0;
-      --highlight: #00ffff;
+    :root{
+      --bg: #0a0d14; --card: #121824; --edge:#1c2230; --accent:#00b3ff; --accent2:#6a5acd; --text:#e5e7eb; --muted:#a7b0c0; --neon:#00ffff;
     }
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Orbitron', sans-serif;
-    }
-    .neon {
-      text-shadow: 0 0 8px var(--accent-color);
-    }
+    body{background: radial-gradient(1200px 600px at 10% -10%, rgba(106,90,205,.2), transparent),
+                     radial-gradient(1200px 700px at 110% -20%, rgba(0,179,255,.18), transparent), var(--bg); color: var(--text)}
+    .neonText{ text-shadow: 0 0 10px rgba(0,179,255,.6), 0 0 24px rgba(0,255,255,.25);}    
+    .badge{ padding:2px 10px; border-radius:9999px; font-size:.7rem; letter-spacing:.02em; }
+    .badge-Covert{ background: linear-gradient(90deg,#ff416c,#ff4b2b); color:white }
+    .badge-Classified{ background: linear-gradient(90deg,#ff6bcb,#ff46a0); color:white }
+    .badge-Restricted{ background: linear-gradient(90deg,#8a5cff,#6b41ff); color:white }
+    .status-sale{ background:linear-gradient(90deg,#00ffa3,#00d9ff); color:#001b22 }
+    .status-sold{ background:#222d3f; color:#93a4c7 }
+    .grid-card:hover{ transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,179,255,.18) }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
-  <!-- Navbar -->
-  <nav class="flex justify-between items-center px-8 py-4 bg-[#12141b] shadow-md border-b border-[#1e2230]">
-    <h1 class="text-2xl font-bold neon">KatzTrade</h1>
-    <ul class="flex gap-8 text-gray-300">
-      <li><a href="#home" class="hover:text-[var(--accent-color)]" onclick="showTab('home')">Home</a></li>
-      <li><a href="#market" class="hover:text-[var(--accent-color)]" onclick="showTab('market')">Market</a></li>
-      <li><a href="#compare" class="hover:text-[var(--accent-color)]" onclick="showTab('compare')">Compare</a></li>
-      <li><a href="#profile" class="hover:text-[var(--accent-color)]" onclick="showTab('profile')">Profile</a></li>
-    </ul>
-    <button class="bg-[var(--accent-color)] text-black px-4 py-2 rounded-lg font-bold">Login with Steam</button>
+<body class="min-h-screen flex flex-col font-sans">
+  <!-- NAVBAR -->
+  <nav class="sticky top-0 z-50 backdrop-blur bg-[#0a0d1499] border-b border-edge">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-8 rounded-md bg-gradient-to-br from-accent2 to-accent shadow-glow2"></div>
+        <h1 class="font-display text-2xl font-extrabold neonText">KatzRead • Seller</h1>
+      </div>
+      <ul class="hidden md:flex items-center gap-8 text-[15px]">
+        <li><button class="hover:text-accent2 transition" onclick="showTab('home')">Home</button></li>
+        <li><button class="hover:text-accent2 transition" onclick="showTab('inventory')">My Inventory</button></li>
+        <li><button class="hover:text-accent2 transition" onclick="showTab('compare')">Compare</button></li>
+        <li><button class="hover:text-accent2 transition" onclick="showTab('sales')">Sold</button></li>
+        <li><button class="hover:text-accent2 transition" onclick="showTab('contact')">Contact</button></li>
+      </ul>
+      <a href="#contact" onclick="showTab('contact')" class="px-4 py-2 font-semibold rounded-lg bg-gradient-to-r from-accent2 to-accent text-black shadow-glow hover:opacity-90">DM for Deals</a>
+    </div>
   </nav>
 
-  <!-- Tabs -->
-  <section id="home" class="tab px-10 py-20 text-center">
-    <h2 class="text-4xl font-bold neon mb-4">Trade Skins Safely & Instantly</h2>
-    <p class="text-gray-400 mb-8">Compare prices across major CS2 markets before you trade.</p>
-    <button onclick="showTab('market')" class="bg-[var(--accent-color)] px-6 py-3 rounded-lg font-bold">Browse Market</button>
-  </section>
-
-  <section id="market" class="tab hidden px-10 py-10">
-    <h2 class="text-3xl font-bold mb-6">Market</h2>
-    <div id="market-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-  </section>
-
-  <section id="compare" class="tab hidden px-10 py-10">
-    <h2 class="text-3xl font-bold mb-6">Price Compare</h2>
-    <table class="w-full text-left border border-[#1f2430]">
-      <thead class="bg-[#171a22] text-[var(--highlight)]">
-        <tr>
-          <th class="p-2">Skin</th>
-          <th class="p-2">Steam ($)</th>
-          <th class="p-2">Buff ($)</th>
-          <th class="p-2">CSFloat ($)</th>
-          <th class="p-2">Lowest</th>
-        </tr>
-      </thead>
-      <tbody id="compare-body" class="text-gray-300"></tbody>
-    </table>
-  </section>
-
-  <section id="profile" class="tab hidden px-10 py-10">
-    <h2 class="text-3xl font-bold mb-6">Profile - KatzRead</h2>
-    <div class="bg-[#171a22] p-6 rounded-lg shadow-lg max-w-md">
-      <p><strong>Total Inventory Value:</strong> $1234.50</p>
-      <p><strong>Top Skins:</strong></p>
-      <ul class="list-disc list-inside text-gray-400">
-        <li>AK-47 | Asiimov</li>
-        <li>M4A1-S | Printstream</li>
-        <li>AWP | Wildfire</li>
-      </ul>
+  <!-- HERO -->
+  <section id="home" class="tab max-w-7xl mx-auto px-6 py-16 md:py-24 text-center">
+    <h2 class="font-display text-4xl md:text-6xl font-extrabold neonText">Personal CS2 Store</h2>
+    <p class="mt-4 md:mt-6 text-lg text-slate-300 max-w-2xl mx-auto">KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve <span class="text-accent2 font-semibold">avantajlı fiyat</span> odaklı bireysel satış vitrini.</p>
+    <div class="mt-8 grid max-w-3xl mx-auto md:grid-cols-3 gap-4">
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
+        <div class="text-slate-400 text-sm">Items Listed</div>
+        <div id="stat-listed" class="mt-1 text-3xl font-extrabold">0</div>
+      </div>
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
+        <div class="text-slate-400 text-sm">Potential Revenue</div>
+        <div id="stat-revenue" class="mt-1 text-3xl font-extrabold">$0.00</div>
+      </div>
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
+        <div class="text-slate-400 text-sm">Avg. Discount vs Market</div>
+        <div id="stat-discount" class="mt-1 text-3xl font-extrabold">0%</div>
+      </div>
+    </div>
+    <div class="mt-8 flex justify-center gap-4">
+      <button onclick="showTab('inventory')" class="px-5 py-3 rounded-xl bg-card border border-edge hover:border-accent2 hover:shadow-glow transition">View Inventory</button>
+      <button onclick="showTab('compare')" class="px-5 py-3 rounded-xl bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">Open Compare</button>
     </div>
   </section>
 
-  <footer class="mt-auto text-center text-gray-500 py-4 border-t border-[#1e2230]">© 2025 KatzTrade Mock Site</footer>
+  <!-- INVENTORY -->
+  <section id="inventory" class="tab hidden max-w-7xl mx-auto px-6 py-10">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+      <h3 class="font-display text-3xl font-extrabold">My Inventory</h3>
+      <div class="flex gap-3 items-center">
+        <select id="filter-status" class="bg-card border border-edge rounded-lg px-3 py-2">
+          <option value="all">All</option>
+          <option value="For Sale">For Sale</option>
+          <option value="Sold">Sold</option>
+        </select>
+        <select id="sort-by" class="bg-card border border-edge rounded-lg px-3 py-2">
+          <option value="name">Sort: Name</option>
+          <option value="myPrice">Sort: My Price</option>
+          <option value="discount">Sort: Discount %</option>
+        </select>
+      </div>
+    </div>
+    <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+  </section>
+
+  <!-- COMPARE -->
+  <section id="compare" class="tab hidden max-w-7xl mx-auto px-6 py-10">
+    <h3 class="font-display text-3xl font-extrabold mb-6">Price Compare</h3>
+    <div class="overflow-x-auto rounded-xl border border-edge bg-card">
+      <table class="w-full text-left">
+        <thead class="bg-[#0f1522] text-neon">
+          <tr>
+            <th class="p-3">Skin</th>
+            <th class="p-3">Steam ($)</th>
+            <th class="p-3">Buff ($)</th>
+            <th class="p-3">CSFloat ($)</th>
+            <th class="p-3">My Price</th>
+            <th class="p-3">% Below Market</th>
+          </tr>
+        </thead>
+        <tbody id="compare-body" class="text-slate-200"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SOLD LIST -->
+  <section id="sales" class="tab hidden max-w-7xl mx-auto px-6 py-10">
+    <h3 class="font-display text-3xl font-extrabold mb-6">Sold History (Mock)</h3>
+    <ul id="sold-list" class="grid md:grid-cols-2 gap-4"></ul>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="tab hidden max-w-4xl mx-auto px-6 py-10">
+    <h3 class="font-display text-3xl font-extrabold mb-6">Contact</h3>
+    <div class="rounded-2xl bg-card border border-edge p-6">
+      <p class="text-slate-300">Satın alma için DM:</p>
+      <ul class="mt-3 space-y-2">
+        <li>Twitter/X: <a class="text-accent2 hover:underline" href="https://x.com/KatzRead" target="_blank">@KatzRead</a></li>
+        <li>Steam: <a class="text-accent2 hover:underline" href="#" target="_blank">steamcommunity.com/id/KatzRead</a></li>
+        <li>Discord: <span class="text-neon font-semibold">katzread</span></li>
+      </ul>
+      <p class="mt-4 text-sm text-slate-400">Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.</p>
+    </div>
+  </section>
+
+  <footer class="mt-auto text-center text-slate-400 py-8 border-t border-edge">© 2025 KatzRead Personal Seller — Mock</footer>
 
   <script>
-    const skins = [
-      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_fireserpent_light_large.3b9f3107.png', steam: 45.5, buff: 40.3, csfloat: 42.7 },
-      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', steam: 58.2, buff: 52.9, csfloat: 54.0 },
-      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', steam: 67.9, buff: 61.4, csfloat: 63.0 },
-      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', steam: 900.0, buff: 880.0, csfloat: 870.5 },
-      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', steam: 40.1, buff: 35.6, csfloat: 37.2 },
-      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', steam: 12.3, buff: 11.1, csfloat: 11.6 }
+    // --- INVENTORY DATA (bireysel satış bilgileri) ---
+    const items = [
+      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_asimov_light_large.1fbe5c0d.png', steam: 45.5, buff: 40.3, csfloat: 42.7, myPrice: 38.0, status:'For Sale' },
+      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', steam: 58.2, buff: 52.9, csfloat: 54.0, myPrice: 49.5, status:'For Sale' },
+      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', steam: 67.9, buff: 61.4, csfloat: 63.0, myPrice: 59.0, status:'For Sale' },
+      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', steam: 900.0, buff: 880.0, csfloat: 870.5, myPrice: 865.0, status:'For Sale' },
+      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', steam: 40.1, buff: 35.6, csfloat: 37.2, myPrice: 34.0, status:'For Sale' },
+      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', steam: 12.3, buff: 11.1, csfloat: 11.6, myPrice: 10.2, status:'For Sale' },
+      { name: 'AWP | Neo-Noir', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_neonoir_light_large.0639b9a0.png', steam: 36.8, buff: 33.4, csfloat: 34.1, myPrice: 31.5, status:'For Sale' },
+      { name: 'AK-47 | The Empress', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_empress_light_large.2f6a3e9b.png', steam: 28.9, buff: 26.2, csfloat: 27.1, myPrice: 24.9, status:'For Sale' },
+      { name: 'M4A4 | Howl', rarity: 'Contraband', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_cu_m4a4_howling_light_large.9cf1c1e7.png', steam: 1700.0, buff: 1650.0, csfloat: 1685.0, myPrice: 1669.0, status:'For Sale' },
+      { name: 'AK-47 | Gold Arabesque', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_gold_arabesque_light_large.4b8f1f9e.png', steam: 540.0, buff: 515.0, csfloat: 520.0, myPrice: 509.0, status:'Sold' },
+      { name: 'AWP | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_asimov_light_large.aa13d1f0.png', steam: 120.0, buff: 110.0, csfloat: 115.0, myPrice: 106.0, status:'Sold' },
+      { name: 'Glock-18 | Water Elemental', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_glock_cu_water_elemental_light_large.9a9f0f9d.png', steam: 6.9, buff: 6.1, csfloat: 6.3, myPrice: 5.7, status:'For Sale' }
     ];
 
-    const grid = document.getElementById('market-grid');
+    const invGrid = document.getElementById('inventory-grid');
     const compareBody = document.getElementById('compare-body');
+    const soldList = document.getElementById('sold-list');
 
-    skins.forEach((s, i) => {
-      const card = document.createElement('div');
-      card.className = 'bg-[var(--card-color)] rounded-xl p-4 text-center shadow-md hover:scale-105 transition-all';
-      card.innerHTML = `
-        <img src="${s.img}" alt="${s.name}" class="mx-auto h-28 mb-3">
-        <h3 class="text-lg font-bold">${s.name}</h3>
-        <p class="text-sm text-gray-400 mb-2">${s.rarity}</p>
-        <p class="text-sm">Steam: <span class='text-[var(--highlight)]'>$${s.steam}</span></p>
-        <p class="text-sm">Buff: <span class='text-[var(--highlight)]'>$${s.buff}</span></p>
-        <p class="text-sm mb-3">CSFloat: <span class='text-[var(--highlight)]'>$${s.csfloat}</span></p>
-        <button onclick="addToCompare(${i})" class="bg-[var(--accent-color)] text-black px-3 py-1 rounded-md font-bold">Compare</button>
-      `;
-      grid.appendChild(card);
-    });
+    function marketLowest(item){ return Math.min(item.steam, item.buff, item.csfloat); }
+    function discountPct(item){ const low = marketLowest(item); return ((low - item.myPrice)/low) * 100; }
 
-    let compareList = [];
+    function formatMoney(v){ return '$' + v.toFixed(2); }
 
-    function addToCompare(i) {
-      const s = skins[i];
-      if (compareList.find(x => x.name === s.name)) return;
-      compareList.push(s);
-      updateCompareTable();
-      showTab('compare');
+    function renderStats(){
+      const listed = items.filter(i=>i.status==='For Sale');
+      const listedCount = listed.length;
+      const revenue = listed.reduce((sum,i)=>sum + i.myPrice, 0);
+      const avgDisc = listed.length ? (listed.reduce((s,i)=>s + discountPct(i), 0)/listed.length) : 0;
+      document.getElementById('stat-listed').textContent = listedCount;
+      document.getElementById('stat-revenue').textContent = formatMoney(revenue);
+      document.getElementById('stat-discount').textContent = (avgDisc>0?'-':'') + Math.abs(avgDisc).toFixed(1) + '%';
     }
 
-    function updateCompareTable() {
-      compareBody.innerHTML = '';
-      compareList.forEach(s => {
-        const lowest = Math.min(s.steam, s.buff, s.csfloat);
-        compareBody.innerHTML += `
-          <tr class="border-t border-[#1f2430]">
-            <td class="p-2">${s.name}</td>
-            <td class="p-2">$${s.steam}</td>
-            <td class="p-2">$${s.buff}</td>
-            <td class="p-2">$${s.csfloat}</td>
-            <td class="p-2 text-[var(--highlight)]">$${lowest}</td>
-          </tr>
+    function renderInventory(){
+      const status = document.getElementById('filter-status').value;
+      const sortBy = document.getElementById('sort-by').value;
+      let data = items.slice();
+      if(status !== 'all') data = data.filter(i=>i.status===status);
+      if(sortBy==='name') data.sort((a,b)=>a.name.localeCompare(b.name));
+      if(sortBy==='myPrice') data.sort((a,b)=>a.myPrice-b.myPrice);
+      if(sortBy==='discount') data.sort((a,b)=>discountPct(b)-discountPct(a));
+
+      invGrid.innerHTML = '';
+      data.forEach((s, i) => {
+        const low = marketLowest(s);
+        const disc = discountPct(s);
+        const statusBadge = s.status==='For Sale' ? 'status-sale' : 'status-sold';
+        const statusText = s.status==='For Sale' ? 'For Sale' : 'Sold';
+        const card = document.createElement('div');
+        card.className = 'grid-card relative rounded-2xl border border-edge bg-card p-4 shadow-sm transition';
+        card.innerHTML = `
+          <div class="absolute right-3 top-3 badge ${statusBadge}">${statusText}</div>
+          <div class="absolute left-3 top-3 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</div>
+          <div class="flex items-center justify-center h-36 mb-3 bg-[#0f1522] rounded-xl border border-edge">
+            <img src="${s.img}" alt="${s.name}" class="max-h-28 object-contain">
+          </div>
+          <h4 class="font-semibold leading-snug">${s.name}</h4>
+          <div class="mt-3 grid grid-cols-4 gap-2 text-sm">
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Steam</div><div class="font-semibold">${formatMoney(s.steam)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Buff</div><div class="font-semibold">${formatMoney(s.buff)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">CSFloat</div><div class="font-semibold">${formatMoney(s.csfloat)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">My Price</div><div class="font-semibold">${formatMoney(s.myPrice)}</div></div>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="text-sm ${disc>0 ? 'text-green-400' : 'text-slate-300'}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}% vs market</div>
+            <div class="flex gap-2">
+              <button onclick="addToCompare(${i})" class="px-3 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow hover:opacity-90">Compare</button>
+              <a href="#contact" onclick="showTab('contact')" class="px-3 py-2 rounded-lg border border-edge bg-[#0f1522] hover:border-accent2">DM</a>
+            </div>
+          </div>
         `;
+        invGrid.appendChild(card);
       });
     }
 
-    function showTab(id) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
+    function renderCompare(){
+      compareBody.innerHTML = '';
+      items.forEach(s => {
+        if(s.status!=='For Sale') return;
+        const low = marketLowest(s);
+        const disc = discountPct(s);
+        compareBody.innerHTML += `
+          <tr class="border-t border-edge hover:bg-[#0f1522]">
+            <td class="p-3 font-medium">${s.name} <span class="ml-2 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</span></td>
+            <td class="p-3">${formatMoney(s.steam)}</td>
+            <td class="p-3">${formatMoney(s.buff)}</td>
+            <td class="p-3">${formatMoney(s.csfloat)}</td>
+            <td class="p-3 font-semibold">${formatMoney(s.myPrice)}</td>
+            <td class="p-3 ${disc>0 ? 'text-green-400':''}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}%</td>
+          </tr>`;
+      });
     }
+
+    function renderSold(){
+      soldList.innerHTML = '';
+      items.filter(i=>i.status==='Sold').forEach(s=>{
+        const li = document.createElement('li');
+        li.className = 'rounded-2xl bg-card border border-edge p-4 flex gap-4 items-center';
+        li.innerHTML = `
+          <div class="h-16 w-16 rounded-xl bg-[#0f1522] border border-edge flex items-center justify-center">
+            <img src="${s.img}" alt="${s.name}" class="max-h-12 object-contain">
+          </div>
+          <div class="flex-1">
+            <div class="font-semibold">${s.name}</div>
+            <div class="text-sm text-slate-400">Sold at ${formatMoney(s.myPrice)}</div>
+          </div>
+          <span class="badge status-sold">SOLD</span>
+        `;
+        soldList.appendChild(li);
+      })
+    }
+
+    function addToCompare(i){ showTab('compare'); }
+
+    function showTab(id){
+      document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      if(id==='inventory'){ renderInventory(); }
+      if(id==='compare'){ renderCompare(); }
+      if(id==='sales'){ renderSold(); }
+    }
+
+    document.getElementById('filter-status').addEventListener('change', renderInventory);
+    document.getElementById('sort-by').addEventListener('change', renderInventory);
+
+    // initial
+    renderStats();
+    renderInventory();
   </script>
 </body>
 </html>
