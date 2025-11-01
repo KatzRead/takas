@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CS2 Trade — Envanterim</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="inventory">
+<header class="navbar">
+<div class="nav-left">
+<a class="brand" href="index.html">takas.yt</a>
+<a href="index.html" data-i18n="marketplace"></a>
+<a href="inventory.html" data-i18n="myInventory"></a>
+<a href="compare.html" data-i18n="compare"></a>
+<a href="admin.html" data-i18n="admin"></a>
+<a href="contact.html" data-i18n="contact"></a>
+</div>
+<div class="nav-right">
+<label class="toggle"><input id="listed-only" type="checkbox"/> <span data-i18n="listedOnly"></span></label>
+<select id="lang-select">
+<option value="tr">TR</option>
+<option value="en">EN</option>
+</select>
+</div>
+</header>
+
+
+<main class="container">
+<h1 data-i18n="yourSaleInventory"></h1>
+<div id="inv-grid" class="grid"></div>
+</main>
+
+
+<footer class="footer">© <span id="year"></span> takas.yt — CS2 Item Trading</footer>
+<script src="script.js"></script>
+</body>
+</html>

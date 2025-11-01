@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CS2 Trade — Admin</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="admin">
+<header class="navbar">
+<div class="nav-left">
+<a class="brand" href="index.html">takas.yt</a>
+<a href="index.html" data-i18n="marketplace"></a>
+<a href="inventory.html" data-i18n="myInventory"></a>
+<a href="compare.html" data-i18n="compare"></a>
+<a href="admin.html" data-i18n="admin"></a>
+<a href="contact.html" data-i18n="contact"></a>
+</div>
+<div class="nav-right">
+<button id="export" class="btn" data-i18n="export"></button>
+<label class="btn">
+<input id="import" type="file" accept="application/json" style="display:none" />
+<span data-i18n="import"></span>
+</label>
+<select id="lang-select">
+<option value="tr">TR</option>
+<option value="en">EN</option>
+</select>
+</div>
+</header>
+
+
+<main class="container">
+<section class="card">
+<h2 id="form-title"></h2>
+<form id="item-form" class="grid form-grid">
+<input required id="f-id" placeholder="id" />
+<input required id="f-name" placeholder="name" />
+<input id="f-marketName" placeholder="marketName" />
+<input id="f-weapon" placeholder="weapon" />
+<input id="f-exterior" placeholder="exterior" value="Factory New" />
+<input type="number" step="0.0001" id="f-float" placeholder="float" />
+<input type="number" step="0.01" id="f-price" placeholder="price" />
+<input id="f-currency" placeholder="currency" value="USD" />
+<input id="f-image" placeholder="image URL" />
+<input id="f-rarity" placeholder="rarity" value="Mil-Spec" />
+<input id="f-collection" placeholder="collection" />
+<label class="check"><input type="checkbox" id="f-statTrak"/> StatTrak</label>
+<div class="form-actions">
+<button class="btn" id="save-btn" type="submit" data-i18n="save"></button>
+<button class="btn" id="cancel-btn" type="button" data-i18n="cancel"></button>
+</div>
+</form>
+</section>
+
+
+<section>
+<div id="skin-grid" class="grid"></div>
+</section>
+</main>
+
+
+<footer class="footer">© <span id="year"></span> takas.yt — CS2 Item Trading</footer>
+<script src="script.js"></script>
+</body>
+</html>
