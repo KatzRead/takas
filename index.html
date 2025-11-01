@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>KatzRead • Personal CS2 Seller</title>
-  <meta name="color-scheme" content="dark">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="color-scheme" content="dark" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -35,18 +35,36 @@
   </script>
   <style>
     :root{
-      --bg: #0a0d14; --card: #121824; --edge:#1c2230; --accent:#00b3ff; --accent2:#6a5acd; --text:#e5e7eb; --muted:#a7b0c0; --neon:#00ffff;
+      --bg:#0a0d14; --card:#121824; --edge:#1c2230; --accent:#00b3ff; --accent2:#6a5acd; --text:#e5e7eb; --muted:#a7b0c0; --neon:#00ffff;
     }
-    body{background: radial-gradient(1200px 600px at 10% -10%, rgba(106,90,205,.2), transparent),
-                     radial-gradient(1200px 700px at 110% -20%, rgba(0,179,255,.18), transparent), var(--bg); color: var(--text)}
-    .neonText{ text-shadow: 0 0 10px rgba(0,179,255,.6), 0 0 24px rgba(0,255,255,.25);}    
-    .badge{ padding:2px 10px; border-radius:9999px; font-size:.7rem; letter-spacing:.02em; }
-    .badge-Covert{ background: linear-gradient(90deg,#ff416c,#ff4b2b); color:white }
-    .badge-Classified{ background: linear-gradient(90deg,#ff6bcb,#ff46a0); color:white }
-    .badge-Restricted{ background: linear-gradient(90deg,#8a5cff,#6b41ff); color:white }
+    body{
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(106,90,205,.20), transparent),
+        radial-gradient(1200px 700px at 110% -20%, rgba(0,179,255,.18), transparent),
+        var(--bg);
+      color:var(--text);
+    }
+    .neonText{ text-shadow:0 0 10px rgba(0,179,255,.6),0 0 24px rgba(0,255,255,.25) }
+    .badge{ padding:2px 10px; border-radius:9999px; font-size:.70rem; letter-spacing:.02em }
+    .badge-Covert{ background:linear-gradient(90deg,#ff416c,#ff4b2b); color:#fff }
+    .badge-Classified{ background:linear-gradient(90deg,#ff6bcb,#ff46a0); color:#fff }
+    .badge-Restricted{ background:linear-gradient(90deg,#8a5cff,#6b41ff); color:#fff }
+    .badge-Contraband{ background:linear-gradient(90deg,#ffd36a,#ff8c00); color:#221400 }
     .status-sale{ background:linear-gradient(90deg,#00ffa3,#00d9ff); color:#001b22 }
     .status-sold{ background:#222d3f; color:#93a4c7 }
-    .grid-card:hover{ transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,179,255,.18) }
+    .grid-card{ transition:transform .2s ease, box-shadow .2s ease }
+    .grid-card:hover{ transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,179,255,.18) }
+    .fade-in{ animation:fadeIn .55s ease both }
+    @keyframes fadeIn{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .shine{ position:relative; overflow:hidden }
+    .shine::after{ content:""; position:absolute; inset:auto -30% 0 -30%; top:-120%; height:200%; transform:rotate(25deg); background:linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent); transition:transform .6s ease }
+    .shine:hover::after{ transform:rotate(25deg) translateY(70%) }
+    .tooltip{ position:relative }
+    .tooltip:hover .tooltip-panel{ opacity:1; transform:translateY(0); pointer-events:auto }
+    .tooltip-panel{ position:absolute; z-index:30; top:120%; left:50%; transform:translate(-50%, -6px); opacity:0; pointer-events:none; background:#0f1522; border:1px solid var(--edge); border-radius:.7rem; padding:.5rem .7rem; white-space:nowrap; color:#cbd5e1; transition:all .16s ease }
+    /* Modal */
+    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,12,.55); backdrop-filter:blur(6px); z-index:60 }
+    .modal.open{ display:flex }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans">
@@ -55,53 +73,57 @@
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="h-8 w-8 rounded-md bg-gradient-to-br from-accent2 to-accent shadow-glow2"></div>
-        <h1 class="font-display text-2xl font-extrabold neonText">KatzRead • Seller</h1>
+        <h1 id="title" class="font-display text-2xl font-extrabold neonText">KatzRead • Satıcı</h1>
       </div>
-      <ul class="hidden md:flex items-center gap-8 text-[15px]">
-        <li><button class="hover:text-accent2 transition" onclick="showTab('home')">Home</button></li>
-        <li><button class="hover:text-accent2 transition" onclick="showTab('inventory')">My Inventory</button></li>
-        <li><button class="hover:text-accent2 transition" onclick="showTab('compare')">Compare</button></li>
-        <li><button class="hover:text-accent2 transition" onclick="showTab('sales')">Sold</button></li>
-        <li><button class="hover:text-accent2 transition" onclick="showTab('contact')">Contact</button></li>
-      </ul>
-      <a href="#contact" onclick="showTab('contact')" class="px-4 py-2 font-semibold rounded-lg bg-gradient-to-r from-accent2 to-accent text-black shadow-glow hover:opacity-90">DM for Deals</a>
+      <div class="flex items-center gap-6">
+        <ul class="hidden md:flex items-center gap-8 text-[15px]">
+          <li><button class="hover:text-accent2 transition" onclick="showTab('home')" id="navHome">Ana Sayfa</button></li>
+          <li><button class="hover:text-accent2 transition" onclick="showTab('inventory')" id="navInventory">Envanter</button></li>
+          <li><button class="hover:text-accent2 transition" onclick="showTab('compare')" id="navCompare">Karşılaştır</button></li>
+          <li><button class="hover:text-accent2 transition" onclick="showTab('sales')" id="navSales">Satıldı</button></li>
+          <li><button class="hover:text-accent2 transition" onclick="showTab('contact')" id="navContact">İletişim</button></li>
+        </ul>
+        <button class="text-accent2 font-semibold" onclick="toggleLang()">🌍 <span id="langLabel">TR</span></button>
+      </div>
     </div>
   </nav>
 
   <!-- HERO -->
-  <section id="home" class="tab max-w-7xl mx-auto px-6 py-16 md:py-24 text-center">
-    <h2 class="font-display text-4xl md:text-6xl font-extrabold neonText">Personal CS2 Store</h2>
-    <p class="mt-4 md:mt-6 text-lg text-slate-300 max-w-2xl mx-auto">KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve <span class="text-accent2 font-semibold">avantajlı fiyat</span> odaklı bireysel satış vitrini.</p>
+  <section id="home" class="tab fade-in max-w-7xl mx-auto px-6 py-16 md:py-24 text-center">
+    <h2 id="heroTitle" class="font-display text-4xl md:text-6xl font-extrabold neonText">Kişisel CS2 Mağazan</h2>
+    <p id="heroDesc" class="mt-4 md:mt-6 text-lg text-slate-300 max-w-2xl mx-auto">KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve <span class="text-accent2 font-semibold">avantajlı fiyat</span> odaklı bireysel satış vitrini.</p>
     <div class="mt-8 grid max-w-3xl mx-auto md:grid-cols-3 gap-4">
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
-        <div class="text-slate-400 text-sm">Items Listed</div>
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
+        <div class="text-slate-400 text-sm" id="metricItemsLabel">İlan Sayısı</div>
         <div id="stat-listed" class="mt-1 text-3xl font-extrabold">0</div>
       </div>
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
-        <div class="text-slate-400 text-sm">Potential Revenue</div>
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
+        <div class="text-slate-400 text-sm" id="metricRevenueLabel">Potansiyel Gelir</div>
         <div id="stat-revenue" class="mt-1 text-3xl font-extrabold">$0.00</div>
       </div>
-      <div class="rounded-2xl bg-card border border-edge p-5 text-left">
-        <div class="text-slate-400 text-sm">Avg. Discount vs Market</div>
+      <div class="rounded-2xl bg-card border border-edge p-5 text-left shine">
+        <div class="text-slate-400 text-sm" id="metricDiscountLabel">Piyasa Altı Ortalama</div>
         <div id="stat-discount" class="mt-1 text-3xl font-extrabold">0%</div>
       </div>
     </div>
     <div class="mt-8 flex justify-center gap-4">
-      <button onclick="showTab('inventory')" class="px-5 py-3 rounded-xl bg-card border border-edge hover:border-accent2 hover:shadow-glow transition">View Inventory</button>
-      <button onclick="showTab('compare')" class="px-5 py-3 rounded-xl bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">Open Compare</button>
+      <button onclick="showTab('inventory')" id="btnInventory" class="px-5 py-3 rounded-xl bg-card border border-edge hover:border-accent2 hover:shadow-glow transition">Envanteri Gör</button>
+      <button onclick="showTab('compare')" id="btnCompare" class="px-5 py-3 rounded-xl bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">Karşılaştır</button>
     </div>
   </section>
 
   <!-- INVENTORY -->
-  <section id="inventory" class="tab hidden max-w-7xl mx-auto px-6 py-10">
+  <section id="inventory" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-      <h3 class="font-display text-3xl font-extrabold">My Inventory</h3>
+      <h3 id="inventoryTitle" class="font-display text-3xl font-extrabold">Envanter</h3>
       <div class="flex gap-3 items-center">
+        <label class="sr-only" for="filter-status">Status</label>
         <select id="filter-status" class="bg-card border border-edge rounded-lg px-3 py-2">
           <option value="all">All</option>
           <option value="For Sale">For Sale</option>
           <option value="Sold">Sold</option>
         </select>
+        <label class="sr-only" for="sort-by">Sort</label>
         <select id="sort-by" class="bg-card border border-edge rounded-lg px-3 py-2">
           <option value="name">Sort: Name</option>
           <option value="myPrice">Sort: My Price</option>
@@ -113,18 +135,18 @@
   </section>
 
   <!-- COMPARE -->
-  <section id="compare" class="tab hidden max-w-7xl mx-auto px-6 py-10">
-    <h3 class="font-display text-3xl font-extrabold mb-6">Price Compare</h3>
+  <section id="compare" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
+    <h3 id="compareTitle" class="font-display text-3xl font-extrabold mb-6">Fiyat Karşılaştır</h3>
     <div class="overflow-x-auto rounded-xl border border-edge bg-card">
       <table class="w-full text-left">
         <thead class="bg-[#0f1522] text-neon">
           <tr>
-            <th class="p-3">Skin</th>
+            <th class="p-3" id="thSkin">Skin</th>
             <th class="p-3">Steam ($)</th>
             <th class="p-3">Buff ($)</th>
             <th class="p-3">CSFloat ($)</th>
-            <th class="p-3">My Price</th>
-            <th class="p-3">% Below Market</th>
+            <th class="p-3" id="thMyPrice">Benim Fiyatım</th>
+            <th class="p-3" id="thBelow">Piyasa Altı</th>
           </tr>
         </thead>
         <tbody id="compare-body" class="text-slate-200"></tbody>
@@ -133,158 +155,270 @@
   </section>
 
   <!-- SOLD LIST -->
-  <section id="sales" class="tab hidden max-w-7xl mx-auto px-6 py-10">
-    <h3 class="font-display text-3xl font-extrabold mb-6">Sold History (Mock)</h3>
+  <section id="sales" class="tab hidden fade-in max-w-7xl mx-auto px-6 py-10">
+    <h3 id="salesTitle" class="font-display text-3xl font-extrabold mb-6">Satış Geçmişi (Mock)</h3>
     <ul id="sold-list" class="grid md:grid-cols-2 gap-4"></ul>
   </section>
 
   <!-- CONTACT -->
-  <section id="contact" class="tab hidden max-w-4xl mx-auto px-6 py-10">
-    <h3 class="font-display text-3xl font-extrabold mb-6">Contact</h3>
+  <section id="contact" class="tab hidden fade-in max-w-4xl mx-auto px-6 py-10">
+    <h3 id="contactTitle" class="font-display text-3xl font-extrabold mb-6">İletişim</h3>
     <div class="rounded-2xl bg-card border border-edge p-6">
-      <p class="text-slate-300">Satın alma için DM:</p>
+      <p id="contactText" class="text-slate-300">Satın almak veya bilgi almak için bana ulaş:</p>
       <ul class="mt-3 space-y-2">
         <li>Twitter/X: <a class="text-accent2 hover:underline" href="https://x.com/KatzRead" target="_blank">@KatzRead</a></li>
         <li>Steam: <a class="text-accent2 hover:underline" href="#" target="_blank">steamcommunity.com/id/KatzRead</a></li>
         <li>Discord: <span class="text-neon font-semibold">katzread</span></li>
       </ul>
-      <p class="mt-4 text-sm text-slate-400">Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.</p>
+      <p class="mt-4 text-xs text-slate-500" id="contactNote">Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.</p>
     </div>
   </section>
+
+  <!-- MODAL (Details) -->
+  <div id="detailsModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="max-w-lg w-full rounded-2xl bg-card border border-edge p-5 shadow-glow fade-in">
+      <div class="flex justify-between items-start gap-3">
+        <h4 id="modalTitle" class="font-display text-xl font-bold">Item</h4>
+        <button class="px-3 py-1 rounded-lg border border-edge hover:border-accent2" onclick="closeModal()">✕</button>
+      </div>
+      <div class="mt-4 grid grid-cols-3 gap-4">
+        <div class="col-span-1 flex items-center justify-center rounded-xl bg-[#0f1522] border border-edge h-28">
+          <img id="modalImg" alt="skin" class="max-h-24 object-contain" />
+        </div>
+        <div class="col-span-2 text-sm space-y-1">
+          <div><span class="text-slate-400" id="mRarityLabel">Rarity</span>: <span id="modalRarity" class="badge"></span></div>
+          <div><span class="text-slate-400">Steam</span>: <span id="modalSteam" class="font-semibold"></span></div>
+          <div><span class="text-slate-400">Buff</span>: <span id="modalBuff" class="font-semibold"></span></div>
+          <div><span class="text-slate-400">CSFloat</span>: <span id="modalCSF" class="font-semibold"></span></div>
+          <div><span class="text-slate-400" id="mMyPriceLabel">My Price</span>: <span id="modalMy" class="font-semibold text-accent2"></span></div>
+        </div>
+      </div>
+      <div class="mt-4 text-sm text-slate-400" id="modalNote">Bu ürün demo amaçlı listelenmiştir.</div>
+      <div class="mt-5 flex justify-end gap-2">
+        <a href="#contact" onclick="closeModal(); showTab('contact')" id="modalDmBtn" class="px-4 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow">DM</a>
+        <button onclick="closeModal()" id="modalCloseBtn" class="px-4 py-2 rounded-lg border border-edge bg-[#0f1522] hover:border-accent2">Kapat</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="mt-auto text-center text-slate-400 py-8 border-t border-edge">© 2025 KatzRead Personal Seller — Mock</footer>
 
   <script>
-    // --- INVENTORY DATA (bireysel satış bilgileri) ---
+    // ---------- DATA (with CDN images + graceful fallback) ----------
     const items = [
-      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_asimov_light_large.1fbe5c0d.png', steam: 45.5, buff: 40.3, csfloat: 42.7, myPrice: 38.0, status:'For Sale' },
-      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', steam: 58.2, buff: 52.9, csfloat: 54.0, myPrice: 49.5, status:'For Sale' },
-      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', steam: 67.9, buff: 61.4, csfloat: 63.0, myPrice: 59.0, status:'For Sale' },
-      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', steam: 900.0, buff: 880.0, csfloat: 870.5, myPrice: 865.0, status:'For Sale' },
-      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', steam: 40.1, buff: 35.6, csfloat: 37.2, myPrice: 34.0, status:'For Sale' },
-      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', steam: 12.3, buff: 11.1, csfloat: 11.6, myPrice: 10.2, status:'For Sale' },
-      { name: 'AWP | Neo-Noir', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_neonoir_light_large.0639b9a0.png', steam: 36.8, buff: 33.4, csfloat: 34.1, myPrice: 31.5, status:'For Sale' },
-      { name: 'AK-47 | The Empress', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_empress_light_large.2f6a3e9b.png', steam: 28.9, buff: 26.2, csfloat: 27.1, myPrice: 24.9, status:'For Sale' },
-      { name: 'M4A4 | Howl', rarity: 'Contraband', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_m4a1_cu_m4a4_howling_light_large.9cf1c1e7.png', steam: 1700.0, buff: 1650.0, csfloat: 1685.0, myPrice: 1669.0, status:'For Sale' },
-      { name: 'AK-47 | Gold Arabesque', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_ak47_cu_gold_arabesque_light_large.4b8f1f9e.png', steam: 540.0, buff: 515.0, csfloat: 520.0, myPrice: 509.0, status:'Sold' },
-      { name: 'AWP | Asiimov', rarity: 'Covert', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_asimov_light_large.aa13d1f0.png', steam: 120.0, buff: 110.0, csfloat: 115.0, myPrice: 106.0, status:'Sold' },
-      { name: 'Glock-18 | Water Elemental', rarity: 'Classified', img: 'https://steamcdn-a.akamaihd.net/apps/730/icons/econ/default_generated/weapon_glock_cu_water_elemental_light_large.9a9f0f9d.png', steam: 6.9, buff: 6.1, csfloat: 6.3, myPrice: 5.7, status:'For Sale' }
+      { name: 'AK-47 | Asiimov', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_asimov_light_large.1fbe5c0d.png', myPrice: 38.0, steam: 45.5, buff: 40.3, csfloat: 42.7, status:'For Sale' },
+      { name: 'M4A1-S | Printstream', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_m4a1_silencer_cu_printstream_light_large.a85b1f2d.png', myPrice: 49.5, steam: 58.2, buff: 52.9, csfloat: 54.0, status:'For Sale' },
+      { name: 'AWP | Wildfire', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_wildfire_light_large.5fffe0b8.png', myPrice: 59.0, steam: 67.9, buff: 61.4, csfloat: 63.0, status:'For Sale' },
+      { name: 'Desert Eagle | Blaze', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_deagle_aq_blaze_light_large.8a28dbcd.png', myPrice: 865.0, steam: 900.0, buff: 880.0, csfloat: 870.5, status:'For Sale' },
+      { name: 'USP-S | Kill Confirmed', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_usp_silencer_cu_kill_confirmed_light_large.d3ad25a7.png', myPrice: 34.0, steam: 40.1, buff: 35.6, csfloat: 37.2, status:'For Sale' },
+      { name: 'AK-47 | Redline', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_redline_light_large.4e8b2cd8.png', myPrice: 10.2, steam: 12.3, buff: 11.1, csfloat: 11.6, status:'For Sale' },
+      { name: 'AWP | Neo-Noir', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_neonoir_light_large.0639b9a0.png', myPrice: 31.5, steam: 36.8, buff: 33.4, csfloat: 34.1, status:'For Sale' },
+      { name: 'AK-47 | The Empress', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_empress_light_large.2f6a3e9b.png', myPrice: 24.9, steam: 28.9, buff: 26.2, csfloat: 27.1, status:'For Sale' },
+      { name: 'M4A4 | Howl', rarity: 'Contraband', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_m4a1_cu_m4a4_howling_light_large.9cf1c1e7.png', myPrice: 1669.0, steam: 1700.0, buff: 1650.0, csfloat: 1685.0, status:'For Sale' },
+      { name: 'AK-47 | Gold Arabesque', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_gold_arabesque_light_large.4b8f1f9e.png', myPrice: 509.0, steam: 540.0, buff: 515.0, csfloat: 520.0, status:'Sold' },
+      { name: 'AWP | Asiimov', rarity: 'Covert', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_awp_cu_awp_asimov_light_large.aa13d1f0.png', myPrice: 106.0, steam: 120.0, buff: 110.0, csfloat: 115.0, status:'Sold' },
+      { name: 'Glock-18 | Water Elemental', rarity: 'Classified', img: 'https://cdn.cloudflare.steamstatic.com/apps/730/icons/econ/default_generated/weapon_glock_cu_water_elemental_light_large.9a9f0f9d.png', myPrice: 5.7, steam: 6.9, buff: 6.1, csfloat: 6.3, status:'For Sale' }
     ];
 
+    // ---------- I18N ----------
+    const TR = {
+      title: 'KatzRead • Satıcı', navHome:'Ana Sayfa', navInventory:'Envanter', navCompare:'Karşılaştır', navSales:'Satıldı', navContact:'İletişim',
+      heroTitle:'Kişisel CS2 Mağazan', heroDesc:'KatzRead tarafından listelenen skin’ler. Piyasa karşılaştırması ve avantajlı fiyat odaklı bireysel satış vitrini.',
+      metricItemsLabel:'İlan Sayısı', metricRevenueLabel:'Potansiyel Gelir', metricDiscountLabel:'Piyasa Altı Ortalama',
+      btnInventory:'Envanteri Gör', btnCompare:'Karşılaştır',
+      inventoryTitle:'Envanter', compareTitle:'Fiyat Karşılaştır', salesTitle:'Satış Geçmişi (Mock)',
+      thSkin:'Skin', thMyPrice:'Benim Fiyatım', thBelow:'Piyasa Altı',
+      contactTitle:'İletişim', contactText:'Satın almak veya bilgi almak için bana ulaş:', contactNote:'Bu site demo/mock amaçlıdır; fiyatlar ve stok temsili olarak gösterilir.',
+      rarity:'Nadirlik', myPrice:'Benim Fiyatım', demoItemNote:'Bu ürün demo amaçlı listelenmiştir.', close:'Kapat', dm:'DM'
+    };
+    const EN = {
+      title:'KatzRead • Seller', navHome:'Home', navInventory:'Inventory', navCompare:'Compare', navSales:'Sold', navContact:'Contact',
+      heroTitle:'My Personal CS2 Store', heroDesc:'Listed skins by KatzRead. Focused on individual selling with best market comparison.',
+      metricItemsLabel:'Items Listed', metricRevenueLabel:'Potential Revenue', metricDiscountLabel:'Avg. Below Market',
+      btnInventory:'View Inventory', btnCompare:'Open Compare',
+      inventoryTitle:'Inventory', compareTitle:'Compare Prices', salesTitle:'Sold History (Mock)',
+      thSkin:'Skin', thMyPrice:'My Price', thBelow:'Below Market',
+      contactTitle:'Contact', contactText:'Reach out for purchase or inquiries:', contactNote:'This site is a demo/mock; prices and stock are representative.',
+      rarity:'Rarity', myPrice:'My Price', demoItemNote:'This item is listed for demo purposes.', close:'Close', dm:'DM'
+    };
+    const TEXT_IDS = ['title','navHome','navInventory','navCompare','navSales','navContact','heroTitle','heroDesc','metricItemsLabel','metricRevenueLabel','metricDiscountLabel','btnInventory','btnCompare','inventoryTitle','compareTitle','salesTitle','thSkin','thMyPrice','thBelow','contactTitle','contactText','contactNote','mRarityLabel','mMyPriceLabel','modalNote','modalCloseBtn','modalDmBtn'];
+    let currentLang = (localStorage.getItem('lang')||'tr');
+
+    function applyLang(){
+      const t = currentLang==='tr' ? TR : EN;
+      document.documentElement.lang = currentLang==='tr'?'tr':'en';
+      document.getElementById('langLabel').textContent = currentLang.toUpperCase();
+      // Map keys to element IDs
+      const map = {
+        title:'title', navHome:'navHome', navInventory:'navInventory', navCompare:'navCompare', navSales:'navSales', navContact:'navContact',
+        heroTitle:'heroTitle', heroDesc:'heroDesc', metricItemsLabel:'metricItemsLabel', metricRevenueLabel:'metricRevenueLabel', metricDiscountLabel:'metricDiscountLabel',
+        btnInventory:'btnInventory', btnCompare:'btnCompare', inventoryTitle:'inventoryTitle', compareTitle:'compareTitle', salesTitle:'salesTitle',
+        thSkin:'thSkin', thMyPrice:'thMyPrice', thBelow:'thBelow',
+        contactTitle:'contactTitle', contactText:'contactText', contactNote:'contactNote',
+        rarity:'mRarityLabel', myPrice:'mMyPriceLabel', demoItemNote:'modalNote', close:'modalCloseBtn', dm:'modalDmBtn'
+      };
+      for(const k in map){ const el = document.getElementById(map[k]); if(el){ el.textContent = t[k]; } }
+    }
+
+    function toggleLang(){ currentLang = currentLang==='tr'?'en':'tr'; localStorage.setItem('lang', currentLang); applyLang(); renderCompare(); renderInventory(); renderSold(); }
+
+    // ---------- Helpers ----------
     const invGrid = document.getElementById('inventory-grid');
     const compareBody = document.getElementById('compare-body');
     const soldList = document.getElementById('sold-list');
 
-    function marketLowest(item){ return Math.min(item.steam, item.buff, item.csfloat); }
-    function discountPct(item){ const low = marketLowest(item); return ((low - item.myPrice)/low) * 100; }
+    const money = v => '$' + v.toFixed(2);
+    const marketLow = it => Math.min(it.steam, it.buff, it.csfloat);
+    const belowPct = it => ((marketLow(it) - it.myPrice) / marketLow(it)) * 100; // positive => below
 
-    function formatMoney(v){ return '$' + v.toFixed(2); }
-
-    function renderStats(){
-      const listed = items.filter(i=>i.status==='For Sale');
-      const listedCount = listed.length;
-      const revenue = listed.reduce((sum,i)=>sum + i.myPrice, 0);
-      const avgDisc = listed.length ? (listed.reduce((s,i)=>s + discountPct(i), 0)/listed.length) : 0;
-      document.getElementById('stat-listed').textContent = listedCount;
-      document.getElementById('stat-revenue').textContent = formatMoney(revenue);
-      document.getElementById('stat-discount').textContent = (avgDisc>0?'-':'') + Math.abs(avgDisc).toFixed(1) + '%';
+    function imageWithFallback(src, alt){
+      const img = new Image();
+      img.alt = alt;
+      img.className = 'max-h-28 object-contain';
+      img.src = src;
+      img.onerror = () => {
+        const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='100%' height='100%' fill='%230f1522'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23a7b0c0' font-family='Inter' font-size='14'>${alt.replace(/&/g,'&amp;')}</text></svg>`);
+        img.src = `data:image/svg+xml;charset=UTF-8,${svg}`;
+      };
+      return img;
     }
 
+    // ---------- Stats ----------
+    function renderStats(){
+      const listed = items.filter(i=>i.status==='For Sale');
+      const revenue = listed.reduce((s,i)=>s+i.myPrice,0);
+      const avgBelow = listed.length? (listed.reduce((s,i)=>s + belowPct(i),0)/listed.length) : 0;
+      document.getElementById('stat-listed').textContent = listed.length;
+      document.getElementById('stat-revenue').textContent = money(revenue);
+      document.getElementById('stat-discount').textContent = (avgBelow>0?'-':'') + Math.abs(avgBelow).toFixed(1) + '%';
+    }
+
+    // ---------- Inventory ----------
     function renderInventory(){
       const status = document.getElementById('filter-status').value;
       const sortBy = document.getElementById('sort-by').value;
       let data = items.slice();
-      if(status !== 'all') data = data.filter(i=>i.status===status);
+      if(status!=='all') data = data.filter(i=>i.status===status);
       if(sortBy==='name') data.sort((a,b)=>a.name.localeCompare(b.name));
       if(sortBy==='myPrice') data.sort((a,b)=>a.myPrice-b.myPrice);
-      if(sortBy==='discount') data.sort((a,b)=>discountPct(b)-discountPct(a));
+      if(sortBy==='discount') data.sort((a,b)=>belowPct(b)-belowPct(a));
 
       invGrid.innerHTML = '';
       data.forEach((s, i) => {
-        const low = marketLowest(s);
-        const disc = discountPct(s);
+        const low = marketLow(s);
+        const disc = belowPct(s);
         const statusBadge = s.status==='For Sale' ? 'status-sale' : 'status-sold';
-        const statusText = s.status==='For Sale' ? 'For Sale' : 'Sold';
+        const statusText = s.status==='For Sale' ? (currentLang==='tr'?'Satışta':'For Sale') : (currentLang==='tr'?'Satıldı':'Sold');
+
         const card = document.createElement('div');
-        card.className = 'grid-card relative rounded-2xl border border-edge bg-card p-4 shadow-sm transition';
+        card.className = 'grid-card relative rounded-2xl border border-edge bg-card p-4 shadow-sm fade-in';
         card.innerHTML = `
           <div class="absolute right-3 top-3 badge ${statusBadge}">${statusText}</div>
           <div class="absolute left-3 top-3 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</div>
-          <div class="flex items-center justify-center h-36 mb-3 bg-[#0f1522] rounded-xl border border-edge">
-            <img src="${s.img}" alt="${s.name}" class="max-h-28 object-contain">
-          </div>
+          <div class="flex items-center justify-center h-36 mb-3 bg-[#0f1522] rounded-xl border border-edge"></div>
           <h4 class="font-semibold leading-snug">${s.name}</h4>
           <div class="mt-3 grid grid-cols-4 gap-2 text-sm">
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Steam</div><div class="font-semibold">${formatMoney(s.steam)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Buff</div><div class="font-semibold">${formatMoney(s.buff)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">CSFloat</div><div class="font-semibold">${formatMoney(s.csfloat)}</div></div>
-            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">My Price</div><div class="font-semibold">${formatMoney(s.myPrice)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Steam</div><div class="font-semibold">${money(s.steam)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">Buff</div><div class="font-semibold">${money(s.buff)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">CSFloat</div><div class="font-semibold">${money(s.csfloat)}</div></div>
+            <div class="p-2 rounded-lg bg-[#0f1522] border border-edge"><div class="text-slate-400 text-xs">${currentLang==='tr'?'Benim Fiyatım':'My Price'}</div><div class="font-semibold text-accent2">${money(s.myPrice)}</div></div>
           </div>
           <div class="mt-3 flex items-center justify-between">
-            <div class="text-sm ${disc>0 ? 'text-green-400' : 'text-slate-300'}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}% vs market</div>
+            <div class="text-sm tooltip ${disc>0 ? 'text-green-400' : 'text-slate-300'}">
+              ${disc>0?'-':''}${Math.abs(disc).toFixed(1)}% ${currentLang==='tr'?'piyasa':'below market'}
+              <span class="tooltip-panel">${currentLang==='tr'?'Piyasa en düşük: ':'Market low: '}${money(low)}</span>
+            </div>
             <div class="flex gap-2">
-              <button onclick="addToCompare(${i})" class="px-3 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow hover:opacity-90">Compare</button>
+              <button class="px-3 py-2 rounded-lg bg-gradient-to-r from-accent2 to-accent text-black font-semibold shadow-glow shine" onclick="openModal(${i})">Details</button>
               <a href="#contact" onclick="showTab('contact')" class="px-3 py-2 rounded-lg border border-edge bg-[#0f1522] hover:border-accent2">DM</a>
             </div>
           </div>
         `;
+        // image container
+        const imgWrap = card.querySelector('.h-36');
+        imgWrap.appendChild(imageWithFallback(s.img, s.name));
         invGrid.appendChild(card);
       });
     }
 
+    // ---------- Compare ----------
     function renderCompare(){
       compareBody.innerHTML = '';
-      items.forEach(s => {
-        if(s.status!=='For Sale') return;
-        const low = marketLowest(s);
-        const disc = discountPct(s);
+      items.filter(x=>x.status==='For Sale').forEach(s => {
+        const low = marketLow(s); const disc = belowPct(s);
         compareBody.innerHTML += `
           <tr class="border-t border-edge hover:bg-[#0f1522]">
             <td class="p-3 font-medium">${s.name} <span class="ml-2 badge badge-${s.rarity.replace(/\s/g,'')}">${s.rarity}</span></td>
-            <td class="p-3">${formatMoney(s.steam)}</td>
-            <td class="p-3">${formatMoney(s.buff)}</td>
-            <td class="p-3">${formatMoney(s.csfloat)}</td>
-            <td class="p-3 font-semibold">${formatMoney(s.myPrice)}</td>
-            <td class="p-3 ${disc>0 ? 'text-green-400':''}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}%</td>
+            <td class="p-3">${money(s.steam)}</td>
+            <td class="p-3">${money(s.buff)}</td>
+            <td class="p-3">${money(s.csfloat)}</td>
+            <td class="p-3 font-semibold">${money(s.myPrice)}</td>
+            <td class="p-3 ${disc>0?'text-green-400':''}">${disc>0?'-':''}${Math.abs(disc).toFixed(1)}%</td>
           </tr>`;
       });
     }
 
+    // ---------- Sold ----------
     function renderSold(){
       soldList.innerHTML = '';
       items.filter(i=>i.status==='Sold').forEach(s=>{
         const li = document.createElement('li');
-        li.className = 'rounded-2xl bg-card border border-edge p-4 flex gap-4 items-center';
+        li.className = 'rounded-2xl bg-card border border-edge p-4 flex gap-4 items-center fade-in';
         li.innerHTML = `
-          <div class="h-16 w-16 rounded-xl bg-[#0f1522] border border-edge flex items-center justify-center">
-            <img src="${s.img}" alt="${s.name}" class="max-h-12 object-contain">
-          </div>
+          <div class="h-16 w-16 rounded-xl bg-[#0f1522] border border-edge flex items-center justify-center"></div>
           <div class="flex-1">
             <div class="font-semibold">${s.name}</div>
-            <div class="text-sm text-slate-400">Sold at ${formatMoney(s.myPrice)}</div>
+            <div class="text-sm text-slate-400">${currentLang==='tr'?'Satış fiyatı:':'Sold at:'} ${money(s.myPrice)}</div>
           </div>
-          <span class="badge status-sold">SOLD</span>
+          <span class="badge status-sold">${currentLang==='tr'?'SATILDI':'SOLD'}</span>
         `;
+        li.querySelector('.h-16').appendChild(imageWithFallback(s.img, s.name));
         soldList.appendChild(li);
       })
     }
 
-    function addToCompare(i){ showTab('compare'); }
+    // ---------- Modal ----------
+    const modal = document.getElementById('detailsModal');
+    function openModal(i){
+      const t = currentLang==='tr' ? TR : EN;
+      const s = items[i];
+      document.getElementById('modalTitle').textContent = s.name;
+      const rarity = document.getElementById('modalRarity');
+      rarity.className = 'badge badge-' + s.rarity.replace(/\s/g,'');
+      rarity.textContent = s.rarity;
+      document.getElementById('modalSteam').textContent = money(s.steam);
+      document.getElementById('modalBuff').textContent = money(s.buff);
+      document.getElementById('modalCSF').textContent = money(s.csfloat);
+      document.getElementById('modalMy').textContent = money(s.myPrice);
+      const img = imageWithFallback(s.img, s.name); img.className = 'max-h-24 object-contain';
+      const wrap = document.getElementById('modalImg');
+      wrap.replaceWith(img); img.id = 'modalImg';
+      applyLang();
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
 
+    // ---------- Tabs ----------
     function showTab(id){
       document.querySelectorAll('.tab').forEach(t => t.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
-      if(id==='inventory'){ renderInventory(); }
-      if(id==='compare'){ renderCompare(); }
-      if(id==='sales'){ renderSold(); }
+      if(id==='inventory') renderInventory();
+      if(id==='compare') renderCompare();
+      if(id==='sales') renderSold();
+      window.scrollTo({top:0, behavior:'smooth'});
     }
+    window.showTab = showTab; // expose for HTML onclick
+    window.toggleLang = toggleLang;
+    window.openModal = openModal; window.closeModal = closeModal;
 
-    document.getElementById('filter-status').addEventListener('change', renderInventory);
-    document.getElementById('sort-by').addEventListener('change', renderInventory);
-
-    // initial
+    // ---------- Init ----------
+    applyLang();
     renderStats();
     renderInventory();
+    renderCompare();
   </script>
 </body>
 </html>
